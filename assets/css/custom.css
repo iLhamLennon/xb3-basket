@@ -7,9 +7,10 @@ html,body {
 
 .material-symbols-outlined {
     font-family: 'Material Symbols Outlined';
-    font-size: 1rem;
+    font-size: 1.8rem;
     transform: rotate(90deg);
     font-weight: bold;
+    color: #afafaf;
 }
 
 .logo_details small {
@@ -187,7 +188,8 @@ form button i {
     min-height: 40px;
 }
 
-.page.feature,
+.page.fixture,
+.page.matchs,
 .page.standing,
 .page.match
 {
@@ -289,6 +291,14 @@ form button i {
     padding-top: 1rem;
 }
 
+.accordion.fixture ul li {
+    list-style: none;
+    font-size: .9rem;
+    min-height: 1.8rem;
+    max-height: 1.8rem;
+    overflow: hidden;
+}
+
 .faq-bottom-border {
     background: var(--bs-gray-800);
 }
@@ -315,10 +325,6 @@ form button i {
 .accordion-item ul li:hover
 {
     opacity: .5;
-}
-
-#minutehome li,#minuteaway li {
-    font-weight: bold;
 }
 
 .top-navbar .container {
@@ -385,8 +391,8 @@ form button i {
 
 .chart {
     width: 100%;
-    min-height: 9.5rem;
-    max-height: 9.5rem;
+    min-height: 4rem;
+    max-height: 4rem;
 }
 
 select {

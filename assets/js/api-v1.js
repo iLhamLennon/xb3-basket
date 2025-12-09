@@ -314,6 +314,7 @@ let key
 let notif, hour, greeting
 let home_id = 0,away_id = 0,home_name = null,away_name = null
 let chart_result = 2
+let criteria,minute,range
 
 async function footy(e,league,value,action) {
 	e.preventDefault()
@@ -344,6 +345,63 @@ function search(frmstanding, val) {
   }
 }
 
+async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name) {
+  $('.load').css('display','block')
+  await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&home='+home+'&away='+away, {
+    method: 'GET'
+  })
+  .then(function(response) {
+    if (response.status != 200) {
+      $('.load').css('display','none')
+    }
+    return response.json()
+  })
+  .then(result => {
+    if (result.status) {
+      criteria = result.value[4]
+      minute = 0
+      range = result.value[6]
+      frmfixture.find('.page.match').attr('src','match.html')
+      frmfixture.find('.page.match').css('display','block')
+      frmfixture.find('.page.match').css('animation','loadin')
+      frmfixture.find('.page.match').css('animation-duration','300ms')
+      var imatch = frmfixture.find('.page.match')
+      imatch.on('load', function() {
+        var frmmatch = imatch.contents()
+        frmmatch.find('.top-navbar_full small').focus()
+        frmmatch.find('.top-navbar_full small').text(name)
+        frmmatch.find('.top-navbar_full i').remove()
+        frmmatch.find('.top-navbar_full small span').remove()
+        frmmatch.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
+        frmmatch.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+flag+"')")
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(0)').text(home_name)
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').text(away_name)
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
+        frmmatch.find('.accordion-item.match:eq(2) button').remove()
+        frmmatch.find('.accordion-item.match:eq(2)').append('<button type="reset" class="btn btn-dark w-100 py-2 my-2"></button>')
+        frmmatch.find('.accordion-item.match button').click(function(e) {
+            if (chart_result>1) {
+              chart_result = 1
+              checkout(frmmatch,1)
+              getchart(frmmatch,1)
+              frmmatch.find('.accordion-item.match button').text('Full Time')
+            }
+            else {
+              chart_result = 2
+              checkout(frmmatch,2)
+              getchart(frmmatch,2)
+              frmmatch.find('.accordion-item.match button').text('Half Time')
+            }
+        })
+        frmmatch.find('.accordion-item.match button').focus()
+        setchart(result.value[0],result.value[1],frmmatch)
+      })
+      $('.load').css('display','none')
+    }
+  })
+}
+
 async function match(formstanding,nation,name,flag,league,id,team) {
   if (home_id<1) {
     home_id = id
@@ -369,6 +427,9 @@ async function match(formstanding,nation,name,flag,league,id,team) {
     })
     .then(result => {
       if (result.status) {
+        criteria = result.value[4]
+        minute = result.value[5]
+        range = result.value[6]
         var istanding = $('.page.standing')
         var frmstanding = istanding.contents()
         frmstanding.find('.accordion-item.standing h6 .flag').removeClass('text-warning')
@@ -406,6 +467,7 @@ async function match(formstanding,nation,name,flag,league,id,team) {
             frmstanding.find('.page.match').css('display','none')
             $('.top-navbar.country').removeClass('d-none')
             $('.page.standing').css('display','none')
+            $('.home-navigation-menu').removeClass('d-none')
           })
           frmmatch.find('.top-navbar_full small span.flag-stat').remove()
           if (result.value[2].length > 0) {
@@ -464,6 +526,7 @@ async function standing(index,nation,league,name,flag) {
   })
   .then(result => {
     if (result.status && result.value[0].length>0) {
+      $('.home-navigation-menu').addClass('d-none')
       $('.page.standing').attr('src','standing.html')
       $('.page.standing').css('display','block')
       $('.page.standing').css('animation','loadin')
@@ -474,6 +537,7 @@ async function standing(index,nation,league,name,flag) {
         var frmstanding = istanding.contents()
         frmstanding.find('.top-navbar_full i').click(function(e) {
           setTimeout(function() {
+            $('.home-navigation-menu').removeClass('d-none')
             $('.top-navbar.country').removeClass('d-none')
             $('.page.standing').css('display','none')
           }, 300)
@@ -503,27 +567,16 @@ async function standing(index,nation,league,name,flag) {
             +'</h6>'
             +'<div class="faq-bottom-border mt-0"></div>'
             +'</div>')
-          frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').on('click', function(e) {
+          frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').on('click', async function(e) {
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').removeClass('text-white')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').removeClass('text-white')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').removeClass('text-white')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').addClass('text-warning')
-            match(frmstanding,nation,name,flag,league,e.target.dataset.id,e.target.dataset.name)
+            await match(frmstanding,nation,name,flag,league,e.target.dataset.id,e.target.dataset.name)
           })
         })
-        /*
-        list.append('<div class="accordion-item standing border-0 rounded-0 menu mt-12 bg-transparent">'
-        +'<form method="post" action="services/'+API+'.php?act=footy" class="accordion-header m-0 py-3 px-2 d-flex align-items-center" novalidate>'
-        +'<input type="text" name="stat" placeholder="URL Footy Stats" class="btn p-2 me-2 text-start bg-white" value="'+result.value[1]+'">'
-        +'<button type="submit" class="btn ms-auto btn-dark w-25 py-2 my-2">Save</button>'
-        +'</form>'
-        +'</div>')
-        frmstanding.find('.accordion-item.standing form').on('submit', function(e) {
-          footy(e,league,$(this).find('input').val(),$(this).attr('action'))
-        })
-        */
         home_id = 0
         away_id = 0
         home_name = null
@@ -562,8 +615,8 @@ async function league(index,nation,country,flag) {
       result.value[0].forEach((rows,liga) => {
         const row = Object.values(rows)
         list.append('<li data-id="'+row[0]+'" class="d-flex">'+row[1]+(!rows[1]?'':'<span class="material-symbols-outlined ms-auto text-white">arrows_outward</span>')+'</li>')
-        $(".accordion-item.country:eq("+index+") ul li:eq("+liga+")").on('click', function(e) {
-          standing(liga,nation,row[0],row[1],flag)
+        $(".accordion-item.country:eq("+index+") ul li:eq("+liga+")").on('click', async function(e) {
+          await standing(liga,nation,row[0],row[1],flag)
         })
       })
       $('.load').css('display','none')
@@ -571,15 +624,12 @@ async function league(index,nation,country,flag) {
   })
 }
 
-$('.nagivation-menu-wrap ul li').on('click', function(e) {
-  $('.top-navbar.country').removeClass('d-none')
-  $('.page.standing').css('display','none')
-  $('.page.match').css('display','none')
+$('.nagivation-menu-wrap ul li').on('click', async function(e) {
   if($('.nagivation-menu-wrap ul li').index($(this)) < 1) {
-    $('.page.feature').css('display','none')
+    $('.page.fixture').css('display','none')
   }
   else {
-    feature()    
+    await fixture()
   }
 })
 
@@ -610,9 +660,9 @@ async function country() {
           +'<div class="faq-bottom-border mt-0"></div>'
           +'<ul></ul>'
           +'</div>')
-        $(".accordion-item.country:eq("+index+") h6").on('click', function(e) {
+        $(".accordion-item.country:eq("+index+") h6").on('click', async function(e) {
           if ($(".accordion-item.country:eq("+index+")").has('i.fa-chevron-down').length<1) {
-            league(index,String(row[1]).toLowerCase().replace(/\s/g,'-'),e.target.dataset.id,e.target.dataset.flag)
+            await league(index,String(row[1]).toLowerCase().replace(/\s/g,'-'),e.target.dataset.id,e.target.dataset.flag)
           }
           else {
             $('.top-navbar_full label.country').text('Country')
@@ -629,9 +679,9 @@ async function country() {
   })
 }
 
-async function feature() {
+async function fixture() {
   $('.load').css('display','block')
-  await fetch('services/'+API+'.php?act=feature', {
+  await fetch('services/'+API+'.php?key='+key+'&act=fixture', {
     method: 'GET'
   })
   .then(function(response) {
@@ -642,87 +692,87 @@ async function feature() {
   })
   .then(result => {
     if (result.status) {
-      console.log(result.value)
-      /*
-      $('.page.standing').attr('src','standing.html')
-      $('.page.standing').css('display','block')
-      $('.page.standing').css('animation','loadin')
-      $('.page.standing').css('animation-duration','300ms')
-      var istanding = $('.page.standing')
-      istanding.on('load', function() {
-        $('.top-navbar.country').addClass('d-none')
-        var frmstanding = istanding.contents()
-        frmstanding.find('.top-navbar_full i').click(function(e) {
-          setTimeout(function() {
-            $('.top-navbar.country').removeClass('d-none')
-            $('.page.standing').css('display','none')
-          }, 300)
-        })
-        frmstanding.find('.top-navbar_full small').text(name)
-        frmstanding.find('.top-navbar_full small span').remove()
-        frmstanding.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
-        frmstanding.find('.top-navbar_full small span').css("background-image","url('https://apiv3.apifootball.com/badges/logo_country/"+flag+"')")
-        if (result.value[1].length > 0) {
-          frmstanding.find('.top-navbar_full small').append('<span class="flag-stat"></span>')
-          frmstanding.find('.top-navbar_full small span.flag-stat').click(function(e) {
-            window.open('https://footystats.org/'+nation+'/'+result.value[1]+'/predictions', '_blank')
-          })
-        }
-        const list = frmstanding.find('.accordion.standing')
+      $('.page.fixture').attr('src','fixture.html')
+      $('.page.fixture').css('display','block')
+      $('.page.fixture').css('animation','loadin')
+      $('.page.fixture').css('animation-duration','300ms')
+      var ifixture = $('.page.fixture')
+      ifixture.on('load', function() {
+        var frmfixture = ifixture.contents()
+        const list = frmfixture.find('.accordion.fixture')
+        frmfixture.find('.page.match').css('display','none')
+        frmfixture.find('.page.match').css('animation-duration','0ms')
         list.empty()
-        result.value[0].forEach((rows,index) => {
+        let n_country = 0,country,league,dates,n_match = 0
+        result.value.forEach(rows => {
           const row = Object.values(rows)
-          list.append('<div class="accordion-item standing border-0 rounded-0 menu mt-12 bg-transparent">'
-            +'<h6 class="accordion-header m-0 py-3 px-2 d-flex align-items-center">'
-            +'<div class="flag me-2 lh-1 text-center col-1 text-white">'+(index+1)+'.</div>'
-            +'<span data-id="'+row[0]+'" data-name="'+row[1]+'" class="lh-1 my-0 col-9 text-white">'+row[1]+'</span>'
-            +'<small class="ms-auto lh-1 col-2 text-center text-white">[ '+row[3]+' ]</small>'
-            +'</h6>'
-            +'<div class="faq-bottom-border mt-0"></div>'
-            +'</div>')
-          frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').on('click', function(e) {
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').removeClass('text-white')
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').removeClass('text-white')
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').removeClass('text-white')
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').addClass('text-warning')
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').addClass('text-warning')
-            frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').addClass('text-warning')
-            match(nation,name,flag,league,e.target.dataset.id,e.target.dataset.name)
+
+          if (country != row[1]) {
+            country = row[1]
+            league = row[4]
+            dates = row[5]
+            list.append('<div class="accordion-item fixture border-0 rounded-0 menu mt-4 bg-transparent">'
+              +'<h6 class="accordion-header m-0 d-flex align-items-center">'
+              +'<div class="flag fixture me-2"></div>'
+              +'<span class="lh-1 my-0 text-white">'+row[1]+'</span>'
+              +'</h6>'
+              +'<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold">'+row[4]+'</small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>'
+              +'</div>')
+            frmfixture.find('.flag.fixture').eq(n_country).css("background-image","url('data:image/png;base64,"+row[2]+"')")
+            n_country++
+          }
+          else if (league == row[4] && dates == row[5]) {
+            list.append('<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
+          else if (league == row[4] && dates != row[5]) {
+            dates = row[5]
+            list.append('<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold"></small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
+          else if (league != row[4]) {
+            league = row[4]
+            list.append('<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold">'+row[4]+'</small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
+          frmfixture.find('ul').eq(n_match).on('click', async function(e) {
+            await matchs(frmfixture,e.target.dataset.flag,e.target.dataset.name,e.target.dataset.league,e.target.dataset.home,e.target.dataset.away,e.target.dataset.nhome,e.target.dataset.naway)
           })
+          n_match++
         })
-        list.append('<div class="accordion-item standing border-0 rounded-0 menu mt-12 bg-transparent">'
-        +'<form method="post" action="services/apifootball.php?act=footy" class="accordion-header m-0 py-3 px-2 d-flex align-items-center" novalidate>'
-        +'<input type="text" name="stat" placeholder="URL Footy Stats" class="btn p-2 me-2 text-start bg-white" value="'+result.value[1]+'">'
-        +'<button type="submit" class="btn ms-auto btn-dark w-25 py-2 my-2">Save</button>'
-        +'</form>'
-        +'</div>')
-        frmstanding.find('.accordion-item.standing form').on('submit', function(e) {
-          footy(e,league,$(this).find('input').val(),$(this).attr('action'))
-        })
-        home_id = 0
-        away_id = 0
-        home_name = null
-        away_name = null
-        window.scrollTo({ top: 0, left: 0 })
       })
-    */
+      $('.load').css('display','none')
     }
-    $('.load').css('display','none')
   })
 }
 
 let mainchartH,mainchartA
 let chartH,chartA
-let goalscoredH_HT = [],goalconcedH_HT = [],goalscoredHp_HT = [],goalconcedHp_HT = [],min_goalscoredHp_HT = [],min_goalconcedHp_HT = []
-let goalscoredH_FT = [],goalconcedH_FT = [],goalscoredHp_FT = [],goalconcedHp_FT = [],min_goalscoredHp_FT = [],min_goalconcedHp_FT = []
-let goalscoredA_HT = [],goalconcedA_HT = [],goalscoredAp_HT = [],goalconcedAp_HT = [],min_goalscoredAp_HT = [],min_goalconcedAp_HT = []
-let goalscoredA_FT = [],goalconcedA_FT = [],goalscoredAp_FT = [],goalconcedAp_FT = [],min_goalscoredAp_FT = [],min_goalconcedAp_FT = []
+let goalscoredH_HT = [],goalconcedH_HT = [],goalscoredH_FT = [],goalconcedH_FT = []
+let goalscoredA_HT = [],goalconcedA_HT = [],goalscoredA_FT = [],goalconcedA_FT = []
 
 function setchart(home,away,frmmatch) {
-  goalscoredH_HT = [],goalconcedH_HT = [],goalscoredHp_HT = [],goalconcedHp_HT = []
-  goalscoredH_FT = [],goalconcedH_FT = [],goalscoredHp_FT = [],goalconcedHp_FT = []
-  goalscoredA_HT = [],goalconcedA_HT = [],goalscoredAp_HT = [],goalconcedAp_HT = []
-  goalscoredA_FT = [],goalconcedA_FT = [],goalscoredAp_FT = [],goalconcedAp_FT = []
+  goalscoredH_HT = [],goalconcedH_HT = []
+  goalscoredH_FT = [],goalconcedH_FT = []
+  goalscoredA_HT = [],goalconcedA_HT = []
+  goalscoredA_FT = [],goalconcedA_FT = []
   
   let team
 
@@ -733,14 +783,6 @@ function setchart(home,away,frmmatch) {
     goalconcedH_HT.push(0-team[1])
     goalscoredH_FT.push(team[2])
     goalconcedH_FT.push(0-team[3])
-    goalscoredHp_HT.push(team[4])
-    goalconcedHp_HT.push(team[5])
-    goalscoredHp_FT.push(team[6])
-    goalconcedHp_FT.push(team[7])
-    min_goalscoredHp_HT.push(team[4])
-    min_goalconcedHp_HT.push(team[5])
-    min_goalscoredHp_FT.push(team[6])
-    min_goalconcedHp_FT.push(team[7])
   })
 
   away.forEach(row => {
@@ -750,14 +792,6 @@ function setchart(home,away,frmmatch) {
     goalconcedA_HT.push(0-team[1])
     goalscoredA_FT.push(team[2])
     goalconcedA_FT.push(0-team[3])
-    goalscoredAp_HT.push(team[4])
-    goalconcedAp_HT.push(team[5])
-    goalscoredAp_FT.push(team[6])
-    goalconcedAp_FT.push(team[7])
-    min_goalscoredAp_HT.push(team[4])
-    min_goalconcedAp_HT.push(team[5])
-    min_goalscoredAp_FT.push(team[6])
-    min_goalconcedAp_FT.push(team[7])
   })
 
   mainchartH = frmmatch.find('#charthome')
@@ -778,178 +812,75 @@ function setchart(home,away,frmmatch) {
   getchart(frmmatch,2)
 }
 
-function checkout(frmmatch,time) {
+async function checkout(frmmatch,time) {
   $('.checkout').css('display','none')
 
-  let min_gscscored_H = time > 1 ? min_goalscoredHp_FT : min_goalscoredHp_HT
-  let min_gscconced_H = time > 1 ? min_goalconcedHp_FT : min_goalconcedHp_HT
-  let min_gscscored_A = time > 1 ? min_goalscoredAp_FT : min_goalscoredAp_HT
-  let min_gscconced_A = time > 1 ? min_goalconcedAp_FT : min_goalconcedAp_HT
-
-  let gscscored_H = time > 1 ? goalscoredHp_FT : goalscoredHp_HT
-  let gscconced_H = time > 1 ? goalconcedHp_FT : goalconcedHp_HT
-  let gscscored_A = time > 1 ? goalscoredAp_FT : goalscoredAp_HT
-  let gscconced_A = time > 1 ? goalconcedAp_FT : goalconcedAp_HT
-
-  let minscoredH = min_gscscored_H.sort(function(a, b) {
-    return a - b
-  })
-  let minscoredH_1 = 0,minscoredH_2 = 0,minscoredH_3 = 0
-  minscoredH.forEach(row => {
-    if (minscoredH_1 < 1) {
-      minscoredH_1 = row
-    }
-    else if (row > minscoredH_1 && minscoredH_2 < 1) {
-      minscoredH_2 = row
-    }
-    else if (row > minscoredH_2 && minscoredH_3 < 1) {
-      minscoredH_3 = row
-    }
-  })
-
-  let minconcedH = min_gscconced_H.sort(function(a, b) {
-    return a - b
-  })
-  let minconcedH_1 = 0,minconcedH_2 = 0,minconcedH_3 = 0
-  minconcedH.forEach(row => {
-    if (minconcedH_1 < 1) {
-      minconcedH_1 = row
-    }
-    else if (row > minconcedH_1 && minconcedH_2 < 1) {
-      minconcedH_2 = row
-    }
-    else if (row > minconcedH_2 && minconcedH_3 < 1) {
-      minconcedH_3 = row
-    }
-  })
-
-  let minscoredA = min_gscscored_A.sort(function(a, b) {
-    return a - b
-  })
-  let minscoredA_1 = 0,minscoredA_2 = 0,minscoredA_3 = 0
-  minscoredA.forEach(row => {
-    if (minscoredA_1 < 1) {
-      minscoredA_1 = row
-    }
-    else if (row > minscoredA_1 && minscoredA_2 < 1) {
-      minscoredA_2 = row
-    }
-    else if (row > minscoredA_2 && minscoredA_3 < 1) {
-      minscoredA_3 = row
-    }
-  })
-
-  let minconcedA = min_gscconced_A.sort(function(a, b) {
-    return a - b
-  })
-  let minconcedA_1 = 0,minconcedA_2 = 0,minconcedA_3 = 0
-  minconcedA.forEach(row => {
-    if (minconcedA_1 < 1) {
-      minconcedA_1 = row
-    }
-    else if (row > minconcedA_1 && minconcedA_2 < 1) {
-      minconcedA_2 = row
-    }
-    else if (row > minconcedA_2 && minconcedA_3 < 1) {
-      minconcedA_3 = row
-    }
-  })
-
-  let xGscored_H1 = 0,xGscored_H2 = 0,xGscored_H3 = 0
-  let xGconced_H1 = 0,xGconced_H2 = 0,xGconced_H3 = 0
-  let xGscored_A1 = 0,xGscored_A2 = 0,xGscored_A3 = 0
-  let xGconced_A1 = 0,xGconced_A2 = 0,xGconced_A3 = 0
-
-  gscscored_H.forEach(row => {
-    if (row >= minscoredH_3) {
-      xGscored_H1++
-      xGscored_H2++
-      xGscored_H3++
-    }
-    else if (row >= minscoredH_2) {
-      xGscored_H1++
-      xGscored_H2++
-    }
-    else {
-      xGscored_H1++
-    }
-  })
-  gscconced_H.forEach(row => {
-    if (row >= minconcedH_3) {
-      xGconced_H1++
-      xGconced_H2++
-      xGconced_H3++
-    }
-    else if (row >= minconcedH_2) {
-      xGconced_H1++
-      xGconced_H2++
-    }
-    else {
-      xGconced_H1++
-    }
-  })
-  gscscored_A.forEach(row => {
-    if (row >= minscoredA_3) {
-      xGscored_A1++
-      xGscored_A2++
-      xGscored_A3++
-    }
-    else if (row >= minscoredA_2) {
-      xGscored_A1++
-      xGscored_A2++
-    }
-    else {
-      xGscored_A1++
-    }
-  })
-  gscconced_A.forEach(row => {
-    if (row >= minconcedA_3) {
-      xGconced_A1++
-      xGconced_A2++
-      xGconced_A3++
-    }
-    else if (row >= minconcedA_2) {
-      xGconced_A1++
-      xGconced_A2++
-    }
-    else {
-      xGconced_A1++
-    }
-  })
-
   frmmatch.find('#minutehome li').css('color','black')
+  frmmatch.find('#minutehome li span').css('color','black')
   frmmatch.find('#minuteaway li').css('color','black')
+  frmmatch.find('#minuteaway li span').css('color','black')
 
-  if (gscscored_H.length > 4 && gscconced_H.length > 4 && gscscored_A.length > 4 && gscconced_A.length > 4) {
-      gscscored_H.forEach((row,index) => {
-        if (index > 3) {
-          if (
-            gscscored_H[index-1] <= row && gscconced_A[index-1] < gscconced_A[index]
-          ) {
-            money()
-            frmmatch.find('#minutehome').empty()
-            frmmatch.find('#minutehome').append('<li class="col-3 p-0">xB '+(((xGscored_H1+xGconced_A1)*20)/2)+'% : '+(parseInt(minscoredH_1)+parseInt(minconcedA_1))+'</li>')
-            frmmatch.find('#minutehome').append('<li class="col-3 p-0">xB '+(((xGscored_H2+xGconced_A2)*20)/2)+'% : '+(parseInt(minscoredH_2)+parseInt(minconcedA_2))+'</li>')
-            frmmatch.find('#minutehome').append('<li class="col-3 p-0">xB '+(((xGscored_H3+xGconced_A3)*20)/2)+'% : '+(parseInt(minscoredH_3)+parseInt(minconcedA_3))+'</li>')
-            frmmatch.find('#minutehome li').css('color','#ffc107')
-          }
-        }
-      })
-      gscscored_A.forEach((row,index) => {
-        if (index > 3) {
-          if (
-            gscscored_A[index-1] <= row && gscconced_H[index-1] < gscconced_H[index]
-          ) {
-            money()
-            frmmatch.find('#minuteaway').empty()
-            frmmatch.find('#minuteaway').append('<li class="col-3 p-0">xB '+(((xGscored_A1+xGconced_H1)*20)/2)+'% : '+(parseInt(minscoredA_1)+parseInt(minconcedH_1))+'</li>')
-            frmmatch.find('#minuteaway').append('<li class="col-3 p-0">xB '+(((xGscored_A2+xGconced_H2)*20)/2)+'% : '+(parseInt(minscoredA_2)+parseInt(minconcedH_2))+'</li>')
-            frmmatch.find('#minuteaway').append('<li class="col-3 p-0">xB '+(((xGscored_A3+xGconced_H3)*20)/2)+'% : '+(parseInt(minscoredA_3)+parseInt(minconcedH_3))+'</li>')
-            frmmatch.find('#minuteaway li').css('color','#ffc107')
-          }
-        }
-      })
+  frmmatch.find('#minutehome li:eq(0) span').text('0')
+  frmmatch.find('#minutehome li:eq(1) span').text('0 - 0`')
+  frmmatch.find('#minutehome li:eq(2) span').text('0')  
+  frmmatch.find('#minuteaway li:eq(0) span').text('0')
+  frmmatch.find('#minuteaway li:eq(1) span').text('0 - 0`')
+  frmmatch.find('#minuteaway li:eq(2) span').text('0')
+
+  if (goalscoredH_HT.length > 4 && goalconcedH_HT.length > 4 && goalscoredA_HT.length > 4 && goalconcedA_HT.length > 4 && goalscoredH_FT.length > 4 && goalconcedH_FT.length > 4 && goalscoredA_FT.length > 4 && goalconcedA_FT.length > 4) {
+    if (time == 1) {
+      if (
+        (criteria[0][0][0] && criteria[0][0][3]) &&
+        (criteria[1][0][0] >= 80 || criteria[1][0][1] >= 80 || criteria[1][0][2] >= 80) &&
+        (goalscoredH_HT[4]+Math.abs(goalconcedA_HT[4])) >= (goalscoredA_HT[4]+Math.abs(goalconcedH_HT[4]))
+      ) {
+        money()
+        frmmatch.find('#minutehome li:eq(0) span').text(range[0][0])
+        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][6][0]+' - '+minute+'`')
+        frmmatch.find('#minutehome li:eq(2) span').text(range[0][1])
+        frmmatch.find('#minutehome li').css('color','#ffc107')
+        frmmatch.find('#minutehome li span').css('color','#ffc107')
+      }
+      if (
+        (criteria[0][0][2] && criteria[0][0][1]) &&
+        (criteria[1][1][0] >= 80 || criteria[1][1][1] >= 80 || criteria[1][1][2] >= 80) &&
+        (goalscoredA_HT[4]+Math.abs(goalconcedH_HT[4])) >= (goalscoredH_HT[4]+Math.abs(goalconcedA_HT[4]))
+      ) {
+        money()
+        frmmatch.find('#minuteaway li:eq(0) span').text(range[0][0])
+        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][6][0]+' - '+minute+'`')
+        frmmatch.find('#minuteaway li:eq(2) span').text(range[0][1])
+        frmmatch.find('#minuteaway li').css('color','#ffc107')
+        frmmatch.find('#minuteaway li span').css('color','#ffc107')
+      }
     }
+    else if (time == 2) {
+      if (
+        (criteria[0][1][0] && criteria[0][1][3]) &&
+        (criteria[1][2][0] >= 80 || criteria[1][2][1] >= 80 || criteria[1][2][2] >= 80) &&
+        (goalscoredH_FT[4]+Math.abs(goalconcedA_FT[4])) >= (goalscoredA_FT[4]+Math.abs(goalconcedH_FT[4]))
+      ) {
+        money()
+        frmmatch.find('#minutehome li:eq(0) span').text(range[1][0])
+        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][6][1]+' - '+minute+'`')
+        frmmatch.find('#minutehome li:eq(2) span').text(range[1][1])
+        frmmatch.find('#minutehome li').css('color','#ffc107')
+        frmmatch.find('#minutehome li span').css('color','#ffc107')
+      }
+      if (
+        (criteria[0][1][2] && criteria[0][1][1]) &&
+        (criteria[1][3][0] >= 80 || criteria[1][3][1] >= 80 || criteria[1][3][2] >= 80) &&
+        (goalscoredA_FT[4]+Math.abs(goalconcedH_FT[4])) >= (goalscoredH_FT[4]+Math.abs(goalconcedA_FT[4]))
+      ) {
+        money()
+        frmmatch.find('#minuteaway li:eq(0) span').text(range[1][0])
+        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][6][1]+' - '+minute+'`')
+        frmmatch.find('#minuteaway li:eq(2) span').text(range[1][1])
+        frmmatch.find('#minuteaway li').css('color','#ffc107')
+        frmmatch.find('#minuteaway li span').css('color','#ffc107')
+      }
+    }
+  }
 }
 
 async function money() {
