@@ -327,6 +327,14 @@ form button i {
     opacity: .5;
 }
 
+.blast {
+    background-image: url('../images/whatsapp.png');
+    background-size: 60%;
+    background-position: center right;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
 .top-navbar .container {
     box-shadow: 0px 2px 5px var(--bs-gray-700);
 }

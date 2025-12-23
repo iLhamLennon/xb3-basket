@@ -358,19 +358,24 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name)
   })
   .then(result => {
     if (result.status) {
-      criteria = result.value[4]
-      minute = 0
-      range = result.value[6]
+      criteria = result.value[2]
       frmfixture.find('.page.match').attr('src','match.html')
       frmfixture.find('.page.match').css('display','block')
       frmfixture.find('.page.match').css('animation','loadin')
       frmfixture.find('.page.match').css('animation-duration','300ms')
       var imatch = frmfixture.find('.page.match')
       imatch.on('load', function() {
+        $('header.country').addClass('d-none')
+        frmfixture.find('header').addClass('d-none')
         var frmmatch = imatch.contents()
         frmmatch.find('.top-navbar_full small').focus()
         frmmatch.find('.top-navbar_full small').text(name)
-        frmmatch.find('.top-navbar_full i').remove()
+        frmmatch.find('.top-navbar_full i').click(function(e) {
+          setTimeout(function() {
+            frmfixture.find('.page.match').css('display','none')
+            frmfixture.find('header').removeClass('d-none')
+          }, 300)
+        })
         frmmatch.find('.top-navbar_full small span').remove()
         frmmatch.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
         frmmatch.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+flag+"')")
@@ -378,8 +383,8 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name)
         frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').text(away_name)
         frmmatch.find('.accordion-item.match:eq(0) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
         frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
-        frmmatch.find('.accordion-item.match:eq(2) button').remove()
-        frmmatch.find('.accordion-item.match:eq(2)').append('<button type="reset" class="btn btn-dark w-100 py-2 my-2"></button>')
+        frmmatch.find('.accordion-item.match:eq(3) button').remove()
+        frmmatch.find('.accordion-item.match:eq(3)').append('<button type="reset" class="btn btn-dark col-12 py-2 my-2"></button>')
         frmmatch.find('.accordion-item.match button').click(function(e) {
             if (chart_result>1) {
               chart_result = 1
@@ -402,7 +407,7 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name)
   })
 }
 
-async function match(formstanding,nation,name,flag,league,id,team) {
+async function match(formstanding,name,flag,league,id,team) {
   if (home_id<1) {
     home_id = id
     home_name = team
@@ -427,9 +432,7 @@ async function match(formstanding,nation,name,flag,league,id,team) {
     })
     .then(result => {
       if (result.status) {
-        criteria = result.value[4]
-        minute = result.value[5]
-        range = result.value[6]
+        criteria = result.value[2]
         var istanding = $('.page.standing')
         var frmstanding = istanding.contents()
         frmstanding.find('.accordion-item.standing h6 .flag').removeClass('text-warning')
@@ -469,25 +472,15 @@ async function match(formstanding,nation,name,flag,league,id,team) {
             $('.page.standing').css('display','none')
             $('.home-navigation-menu').removeClass('d-none')
           })
-          frmmatch.find('.top-navbar_full small span.flag-stat').remove()
-          if (result.value[2].length > 0) {
-            frmmatch.find('.top-navbar_full small').append('<span class="flag-stat"></span>')
-            frmmatch.find('.top-navbar_full small span').on('click', function(e) {
-              navigator.clipboard.writeText('https://footystats.org/'+nation+'/'+result.value[2]+'/predictions')
-              $('body').append('<label class="popup">URL Copied</label>')
-              setTimeout(function() {
-                $('.popup').remove()
-              }, 1500)
-            })
-          }
+
           frmmatch.find('.accordion-item.match:eq(0) ul li:eq(0)').text(home_name)
           frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').text(away_name)
 
           frmmatch.find('.accordion-item.match:eq(0) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
           frmmatch.find('.accordion-item.match:eq(1) ul li:eq(0)').addClass(result.value[3]?'fw-bold text-danger':'text-white')
 
-          frmmatch.find('.accordion-item.match:eq(2) button').remove()
-          frmmatch.find('.accordion-item.match:eq(2)').append('<button type="reset" class="btn btn-dark w-100 py-2 my-2"></button>')
+          frmmatch.find('.accordion-item.match:eq(3) button').remove()
+          frmmatch.find('.accordion-item.match:eq(3)').append('<button type="reset" class="btn btn-dark col-12 py-2 my-2"></button>')
           frmmatch.find('.accordion-item.match button').click(function(e) {
             if (chart_result>1) {
               chart_result = 1
@@ -513,9 +506,9 @@ async function match(formstanding,nation,name,flag,league,id,team) {
   }
 }
 
-async function standing(index,nation,league,name,flag) {
+async function standing(index,league,name,nba,flag) {
   $('.load').css('display','block')
-  await fetch('services/'+API+'.php?key='+key+'&act=standing&league='+league, {
+  await fetch('services/'+API+'.php?key='+key+'&act=standing&league='+league+'&nba='+nba, {
     method: 'GET'
   })
   .then(function(response) {
@@ -525,7 +518,7 @@ async function standing(index,nation,league,name,flag) {
     return response.json()
   })
   .then(result => {
-    if (result.status && result.value[0].length>0) {
+    if (result.status && result.value.length>0) {
       $('.home-navigation-menu').addClass('d-none')
       $('.page.standing').attr('src','standing.html')
       $('.page.standing').css('display','block')
@@ -546,18 +539,15 @@ async function standing(index,nation,league,name,flag) {
         frmstanding.find('.top-navbar_full small span').remove()
         frmstanding.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
         frmstanding.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+flag+"')")
-        if (result.value[1].length > 0) {
-          frmstanding.find('.top-navbar_full small').append('<span class="flag-stat"></span>')
-        }
         const list = frmstanding.find('.accordion.standing')
         list.empty()
-        if (result.value[0].length > 30) {
+        if (result.value.length > 50) {
           list.append('<input type="search" name="search" placeholder="Search name..." class="btn p-2 text-start bg-white" autofocus>')
           frmstanding.find('input[type="search"]').on('input', function(e) {
             search(frmstanding, e.target.value)
           })
         }
-        result.value[0].forEach((rows,index) => {
+        result.value.forEach((rows,index) => {
           const row = Object.values(rows)
           list.append('<div class="accordion-item standing border-0 rounded-0 menu mt-12 bg-transparent">'
             +'<h6 class="accordion-header m-0 py-3 px-2 d-flex align-items-center">'
@@ -574,7 +564,7 @@ async function standing(index,nation,league,name,flag) {
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').addClass('text-warning')
-            await match(frmstanding,nation,name,flag,league,e.target.dataset.id,e.target.dataset.name)
+            await match(frmstanding,name,flag,league,e.target.dataset.id,e.target.dataset.name)
           })
         })
         home_id = 0
@@ -591,7 +581,7 @@ async function standing(index,nation,league,name,flag) {
   })
 }
 
-async function league(index,nation,country,flag) {
+async function league(index,country,flag) {
   $('.load').css('display','block')
   await fetch('services/'+API+'.php?act=league&country='+country, {
     method: 'GET'
@@ -612,11 +602,11 @@ async function league(index,nation,country,flag) {
       $('.accordion-item.country:eq('+index+') h6 i').removeClass('fa-chevron-right')
       $('.accordion-item.country:eq('+index+') h6 i').addClass('fa-chevron-down')
       const list = $('.accordion-item.country:eq('+index+') ul')
-      result.value[0].forEach((rows,liga) => {
+      result.value.forEach((rows,liga) => {
         const row = Object.values(rows)
         list.append('<li data-id="'+row[0]+'" class="d-flex">'+row[1]+(!rows[1]?'':'<span class="material-symbols-outlined ms-auto text-white">arrows_outward</span>')+'</li>')
         $(".accordion-item.country:eq("+index+") ul li:eq("+liga+")").on('click', async function(e) {
-          await standing(liga,nation,row[0],row[1],flag)
+          await standing(liga,row[0],row[1],row[3],flag)
         })
       })
       $('.load').css('display','none')
@@ -626,6 +616,7 @@ async function league(index,nation,country,flag) {
 
 $('.nagivation-menu-wrap ul li').on('click', async function(e) {
   if($('.nagivation-menu-wrap ul li').index($(this)) < 1) {
+    $('header.country').removeClass('d-none')
     $('.page.fixture').css('display','none')
   }
   else {
@@ -662,7 +653,7 @@ async function country() {
           +'</div>')
         $(".accordion-item.country:eq("+index+") h6").on('click', async function(e) {
           if ($(".accordion-item.country:eq("+index+")").has('i.fa-chevron-down').length<1) {
-            await league(index,String(row[1]).toLowerCase().replace(/\s/g,'-'),e.target.dataset.id,e.target.dataset.flag)
+            await league(index,e.target.dataset.id,e.target.dataset.flag)
           }
           else {
             $('.top-navbar_full label.country').text('Country')
@@ -695,18 +686,19 @@ async function fixture() {
       $('.page.fixture').attr('src','fixture.html')
       $('.page.fixture').css('display','block')
       $('.page.fixture').css('animation','loadin')
-      $('.page.fixture').css('animation-duration','300ms')
+      $('.page.fixture').css('animation-duration','300ms')      
       var ifixture = $('.page.fixture')
       ifixture.on('load', function() {
         var frmfixture = ifixture.contents()
         const list = frmfixture.find('.accordion.fixture')
+        $('header.country').addClass('d-none')
+        frmfixture.find('header').removeClass('d-none')
         frmfixture.find('.page.match').css('display','none')
         frmfixture.find('.page.match').css('animation-duration','0ms')
         list.empty()
         let n_country = 0,country,league,dates,n_match = 0
         result.value.forEach(rows => {
           const row = Object.values(rows)
-
           if (country != row[1]) {
             country = row[1]
             league = row[4]
@@ -815,71 +807,171 @@ function setchart(home,away,frmmatch) {
 async function checkout(frmmatch,time) {
   $('.checkout').css('display','none')
 
-  frmmatch.find('#minutehome li').css('color','black')
-  frmmatch.find('#minutehome li span').css('color','black')
-  frmmatch.find('#minuteaway li').css('color','black')
-  frmmatch.find('#minuteaway li span').css('color','black')
+  frmmatch.find('#minutehome li').css('color','#523c01')
+  frmmatch.find('#minutehome li label').css('color','#523c01')
+  frmmatch.find('#minutehome li span').css('color','#523c01')
+  frmmatch.find('#forecasthome li').css('color','#523c01')
+  frmmatch.find('#forecasthome li span').css('color','#523c01')
+  frmmatch.find('#minuteaway li').css('color','#523c01')
+  frmmatch.find('#minuteaway li label').css('color','#523c01')
+  frmmatch.find('#minuteaway li span').css('color','#523c01')
+  frmmatch.find('#forecastaway li').css('color','#523c01')
+  frmmatch.find('#forecastaway li span').css('color','#523c01')
+  frmmatch.find('#scores li small').css('color','#000000')
 
+  frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('(0:0)')
+  frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('')
+  frmmatch.find('#minutehome li:eq(0) label').text('0')
   frmmatch.find('#minutehome li:eq(0) span').text('0')
-  frmmatch.find('#minutehome li:eq(1) span').text('0 - 0`')
-  frmmatch.find('#minutehome li:eq(2) span').text('0')  
+  frmmatch.find('#minutehome li:eq(1) label').text('0')
+  frmmatch.find('#minutehome li:eq(1) span').text('0')
+  frmmatch.find('#minutehome li:eq(2) label').text('0')
+  frmmatch.find('#minutehome li:eq(2) span').text('0')
+  frmmatch.find('#minutehome li:eq(3) label').text('0')
+  frmmatch.find('#minutehome li:eq(3) span').text('0')
+  frmmatch.find('#forecasthome li:eq(0) span').text('X')
+  frmmatch.find('#forecasthome li:eq(1) span').text('X')
+  frmmatch.find('#forecasthome li:eq(2) span').text('X')
+  frmmatch.find('#forecasthome li:eq(3) span').text('X')
+  frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('(0:0)')
+  frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('')
+  frmmatch.find('#minuteaway li:eq(0) label').text('0')
   frmmatch.find('#minuteaway li:eq(0) span').text('0')
-  frmmatch.find('#minuteaway li:eq(1) span').text('0 - 0`')
+  frmmatch.find('#minuteaway li:eq(1) label').text('0')
+  frmmatch.find('#minuteaway li:eq(1) span').text('0')
+  frmmatch.find('#minuteaway li:eq(2) label').text('0')
   frmmatch.find('#minuteaway li:eq(2) span').text('0')
+  frmmatch.find('#minuteaway li:eq(3) label').text('0')
+  frmmatch.find('#minuteaway li:eq(3) span').text('0')
+  frmmatch.find('#forecastaway li:eq(0) span').text('X')
+  frmmatch.find('#forecastaway li:eq(1) span').text('X')
+  frmmatch.find('#forecastaway li:eq(2) span').text('X')
+  frmmatch.find('#forecastaway li:eq(3) span').text('X')
 
   if (goalscoredH_HT.length > 4 && goalconcedH_HT.length > 4 && goalscoredA_HT.length > 4 && goalconcedA_HT.length > 4 && goalscoredH_FT.length > 4 && goalconcedH_FT.length > 4 && goalscoredA_FT.length > 4 && goalconcedA_FT.length > 4) {
     if (time == 1) {
-      if (
-        (criteria[0][0][0] && criteria[0][0][3]) &&
-        (criteria[1][0][0] >= 80 || criteria[1][0][1] >= 80 || criteria[1][0][2] >= 80) &&
-        (goalscoredH_HT[4]+Math.abs(goalconcedA_HT[4])) >= (goalscoredA_HT[4]+Math.abs(goalconcedH_HT[4]))
-      ) {
+      if (criteria[0][0][0] && criteria[0][0][3] || criteria[0][0][2] && criteria[0][0][1]) {
         money()
-        frmmatch.find('#minutehome li:eq(0) span').text(range[0][0])
-        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][6][0]+' - '+minute+'`')
-        frmmatch.find('#minutehome li:eq(2) span').text(range[0][1])
-        frmmatch.find('#minutehome li').css('color','#ffc107')
-        frmmatch.find('#minutehome li span').css('color','#ffc107')
-      }
-      if (
-        (criteria[0][0][2] && criteria[0][0][1]) &&
-        (criteria[1][1][0] >= 80 || criteria[1][1][1] >= 80 || criteria[1][1][2] >= 80) &&
-        (goalscoredA_HT[4]+Math.abs(goalconcedH_HT[4])) >= (goalscoredH_HT[4]+Math.abs(goalconcedA_HT[4]))
-      ) {
+        frmmatch.find('#minutehome li:eq(0) label').text(criteria[3][7][0][0][0])
+        frmmatch.find('#minutehome li:eq(0) span').text(criteria[1][0][0]+' ('+criteria[1][3][0]+')')
+        frmmatch.find('#minutehome li:eq(1) label').text(criteria[3][7][0][0][1])
+        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][0][1]+' ('+criteria[1][3][1]+')')
+        frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][0][0][2])
+        frmmatch.find('#minutehome li:eq(2) span').text(criteria[1][0][2]+' ('+criteria[1][3][2]+')')
+        frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][0][0][3])
+        frmmatch.find('#minutehome li:eq(3) span').text(criteria[1][0][3]+' ('+criteria[1][3][3]+')')
+
+        frmmatch.find('#forecasthome li:eq(0) span').text(criteria[1][5][0][0]+'X '+criteria[1][7][0][0]+'pQ')
+        frmmatch.find('#forecasthome li:eq(1) span').text(criteria[1][5][0][1]+'X '+criteria[1][7][0][1]+'pQ')
+        frmmatch.find('#forecasthome li:eq(2) span').text(criteria[1][5][0][2]+'X '+criteria[1][7][0][2]+'pQ')
+        frmmatch.find('#forecasthome li:eq(3) span').text(criteria[1][5][0][3]+'X '+criteria[1][7][0][3]+'pQ')
+
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        if (criteria[1][2][0] > 0) {
+          frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][0])
+        }
+
+        if (criteria[0][0][0] && criteria[0][0][3]) {
+          frmmatch.find('#minutehome li').css('color','#ffc107')
+          frmmatch.find('#minutehome li label').css('color','#ffc107')
+          frmmatch.find('#minutehome li span').css('color','#ffc107')
+          frmmatch.find('#forecasthome li').css('color','#ffc107')
+          frmmatch.find('#forecasthome li span').css('color','#ffc107')
+        }
+
         money()
-        frmmatch.find('#minuteaway li:eq(0) span').text(range[0][0])
-        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][6][0]+' - '+minute+'`')
-        frmmatch.find('#minuteaway li:eq(2) span').text(range[0][1])
-        frmmatch.find('#minuteaway li').css('color','#ffc107')
-        frmmatch.find('#minuteaway li span').css('color','#ffc107')
+        frmmatch.find('#minuteaway li:eq(0) label').text(criteria[3][7][0][1][0])
+        frmmatch.find('#minuteaway li:eq(0) span').text(criteria[1][0][0]+' ('+criteria[1][3][0]+')')
+        frmmatch.find('#minuteaway li:eq(1) label').text(criteria[3][7][0][1][1])
+        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][0][1]+' ('+criteria[1][3][1]+')')
+        frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][0][1][2])
+        frmmatch.find('#minuteaway li:eq(2) span').text(criteria[1][0][2]+' ('+criteria[1][3][2]+')')
+        frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][0][1][3])
+        frmmatch.find('#minuteaway li:eq(3) span').text(criteria[1][0][3]+' ('+criteria[1][3][3]+')')
+
+        frmmatch.find('#forecastaway li:eq(0) span').text(criteria[1][5][1][0]+'X '+criteria[1][7][0][0]+'pQ')
+        frmmatch.find('#forecastaway li:eq(1) span').text(criteria[1][5][1][1]+'X '+criteria[1][7][0][1]+'pQ')
+        frmmatch.find('#forecastaway li:eq(2) span').text(criteria[1][5][1][2]+'X '+criteria[1][7][0][2]+'pQ')
+        frmmatch.find('#forecastaway li:eq(3) span').text(criteria[1][5][1][3]+'X '+criteria[1][7][0][3]+'pQ')
+
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        if (criteria[1][2][0] > 0) {
+          frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][0])
+        }
+
+        if (criteria[0][0][2] && criteria[0][0][1]) {
+          frmmatch.find('#minuteaway li').css('color','#ffc107')
+          frmmatch.find('#minuteaway li label').css('color','#ffc107')
+          frmmatch.find('#minuteaway li span').css('color','#ffc107')
+          frmmatch.find('#forecastaway li').css('color','#ffc107')
+          frmmatch.find('#forecastaway li span').css('color','#ffc107')
+        }
       }
     }
     else if (time == 2) {
-      if (
-        (criteria[0][1][0] && criteria[0][1][3]) &&
-        (criteria[1][2][0] >= 80 || criteria[1][2][1] >= 80 || criteria[1][2][2] >= 80) &&
-        (goalscoredH_FT[4]+Math.abs(goalconcedA_FT[4])) >= (goalscoredA_FT[4]+Math.abs(goalconcedH_FT[4]))
-      ) {
+      if (criteria[0][1][0] && criteria[0][1][3] || (criteria[0][1][2] && criteria[0][1][1])) {
         money()
-        frmmatch.find('#minutehome li:eq(0) span').text(range[1][0])
-        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][6][1]+' - '+minute+'`')
-        frmmatch.find('#minutehome li:eq(2) span').text(range[1][1])
-        frmmatch.find('#minutehome li').css('color','#ffc107')
-        frmmatch.find('#minutehome li span').css('color','#ffc107')
-      }
-      if (
-        (criteria[0][1][2] && criteria[0][1][1]) &&
-        (criteria[1][3][0] >= 80 || criteria[1][3][1] >= 80 || criteria[1][3][2] >= 80) &&
-        (goalscoredA_FT[4]+Math.abs(goalconcedH_FT[4])) >= (goalscoredH_FT[4]+Math.abs(goalconcedA_FT[4]))
-      ) {
+        frmmatch.find('#minutehome li:eq(0) label').text(criteria[3][7][1][0][0])
+        frmmatch.find('#minutehome li:eq(0) span').text(criteria[1][1][0]+' ('+criteria[1][4][0]+')')
+        frmmatch.find('#minutehome li:eq(1) label').text(criteria[3][7][1][0][1])
+        frmmatch.find('#minutehome li:eq(1) span').text(criteria[1][1][1]+' ('+criteria[1][4][1]+')')
+        frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][1][0][2])
+        frmmatch.find('#minutehome li:eq(2) span').text(criteria[1][1][2]+' ('+criteria[1][4][2]+')')
+        frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][1][0][3])
+        frmmatch.find('#minutehome li:eq(3) span').text(criteria[1][1][3]+' ('+criteria[1][4][3]+')')
+
+        frmmatch.find('#forecasthome li:eq(0) span').text(criteria[1][6][0][0]+'X '+criteria[1][7][1][0]+'pQ')
+        frmmatch.find('#forecasthome li:eq(1) span').text(criteria[1][6][0][1]+'X '+criteria[1][7][1][1]+'pQ')
+        frmmatch.find('#forecasthome li:eq(2) span').text(criteria[1][6][0][2]+'X '+criteria[1][7][1][2]+'pQ')
+        frmmatch.find('#forecasthome li:eq(3) span').text(criteria[1][6][0][3]+'X '+criteria[1][7][1][3]+'pQ')
+        
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        if (criteria[1][2][1] > 0) {
+          frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
+        }
+
+        if (criteria[0][1][0] && criteria[0][1][3]) {
+          frmmatch.find('#minutehome li').css('color','#ffc107')
+          frmmatch.find('#minutehome li label').css('color','#ffc107')
+          frmmatch.find('#minutehome li span').css('color','#ffc107')
+          frmmatch.find('#forecasthome li').css('color','#ffc107')
+          frmmatch.find('#forecasthome li span').css('color','#ffc107')
+        }
+
         money()
-        frmmatch.find('#minuteaway li:eq(0) span').text(range[1][0])
-        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][6][1]+' - '+minute+'`')
-        frmmatch.find('#minuteaway li:eq(2) span').text(range[1][1])
-        frmmatch.find('#minuteaway li').css('color','#ffc107')
-        frmmatch.find('#minuteaway li span').css('color','#ffc107')
+        frmmatch.find('#minuteaway li:eq(0) label').text(criteria[3][7][1][1][0])
+        frmmatch.find('#minuteaway li:eq(0) span').text(criteria[1][1][0]+' ('+criteria[1][4][0]+')')
+        frmmatch.find('#minuteaway li:eq(1) label').text(criteria[3][7][1][1][1])
+        frmmatch.find('#minuteaway li:eq(1) span').text(criteria[1][1][1]+' ('+criteria[1][4][1]+')')
+        frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][1][1][2])
+        frmmatch.find('#minuteaway li:eq(2) span').text(criteria[1][1][2]+' ('+criteria[1][4][2]+')')
+        frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][1][1][3])
+        frmmatch.find('#minuteaway li:eq(3) span').text(criteria[1][1][3]+' ('+criteria[1][4][3]+')')
+
+        frmmatch.find('#forecastaway li:eq(0) span').text(criteria[1][6][1][0]+'X '+criteria[1][7][1][0]+'pQ')
+        frmmatch.find('#forecastaway li:eq(1) span').text(criteria[1][6][1][1]+'X '+criteria[1][7][1][1]+'pQ')
+        frmmatch.find('#forecastaway li:eq(2) span').text(criteria[1][6][1][2]+'X '+criteria[1][7][1][2]+'pQ')
+        frmmatch.find('#forecastaway li:eq(3) span').text(criteria[1][6][1][3]+'X '+criteria[1][7][1][3]+'pQ')
+        
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        if (criteria[1][2][1] > 0) {
+          frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
+        }
+
+        if (criteria[0][1][2] && criteria[0][1][1]) {
+          frmmatch.find('#minuteaway li').css('color','#ffc107')
+          frmmatch.find('#minuteaway li label').css('color','#ffc107')
+          frmmatch.find('#minuteaway li span').css('color','#ffc107')
+          frmmatch.find('#forecastaway li').css('color','#ffc107')
+          frmmatch.find('#forecastaway li span').css('color','#ffc107')
+        }
       }
     }
+    frmmatch.find('#scores li small').css('color','white')
+    frmmatch.find('#scores li:eq(0) small').text(criteria[1][8][0])
+    frmmatch.find('#scores li:eq(1) small').text(criteria[1][8][1])
+    frmmatch.find('#scores li:eq(2) small').text(criteria[1][8][2])
+    frmmatch.find('#scores li:eq(3) small').text(criteria[1][8][3])
   }
 }
 
