@@ -399,8 +399,8 @@ form button i {
 
 .chart {
     width: 100%;
-    min-height: 4rem;
-    max-height: 4rem;
+    min-height: 3rem;
+    max-height: 3rem;
 }
 
 select {

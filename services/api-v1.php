@@ -6,7 +6,6 @@
     $act = $_GET['act'];
     $cup = array('pokal','coupe','copa','cup','troph','coppa','shield','piala','beker','trofeo','torneo','taça','tournament','taca');
     $absError = 1;
-    $nba = 0;
     $result = [ 'status' => true, 'value' => array(), 'message' => null ];
 
     if ($act=='country') {
@@ -92,7 +91,7 @@
         $t2 = 'as_countries';
         $t3 = 'as_leagues';
 
-        $sql = mysqli_query($conn, "SELECT t2.country_key,t2.country_name,t2.country_flag,t3.league_key,t3.league_name,t1.dates,t1.home,t1.away,t1.nhome,t1.naway FROM $t1 t1 LEFT JOIN $t2 t2 ON t2.country_key=t1.country LEFT JOIN $t3 t3 ON t3.league_key=t1.league WHERE t1.sport='$sport' ORDER BY t1.dates,t1.country,t1.league");
+        $sql = mysqli_query($conn, "SELECT t2.country_key,t2.country_name,t2.country_flag,t3.league_key,t3.league_name,t1.dates,t1.home,t1.away,t1.nhome,t1.naway,t3.nba FROM $t1 t1 LEFT JOIN $t2 t2 ON t2.country_key=t1.country LEFT JOIN $t3 t3 ON t3.league_key=t1.league WHERE t1.sport='$sport' ORDER BY t1.dates,t1.country,t1.league");
         $rows = [];
         while($row = mysqli_fetch_assoc($sql)) {
             $rows[] = $row;
@@ -115,7 +114,8 @@
                     'home' => $row['home'],
                     'away' => $row['away'],
                     'nhome' => $row['nhome'],
-                    'naway' => $row['naway']
+                    'naway' => $row['naway'],
+                    'nba' => $row['nba']
                 ]);
             }
         }
@@ -149,7 +149,6 @@
     else if ($act=='standing') {
         $key = $_GET['key'];
         $league = $_GET['league'];
-        $nba = (int)$_GET['nba'];
         $table = 'as_standings';
 
         $sql = mysqli_query($conn, "SELECT * FROM as_leagues WHERE league_key=$league AND sport='$sport'");
@@ -223,6 +222,7 @@
         $key = $_GET['key'];
         $league = $_GET['league'];
         $team = array($_GET['home'],$_GET['away']);
+        $nba = $_GET['nba'];
         $from = date('Y-m-d', strtotime('-3 month'));
         $to = date('Y-m-d');
         $table = 'as_matchs';
@@ -244,6 +244,7 @@
             usort($raws->result, function($a, $b) {
                 return $b->event_date <=> $a->event_date;
             });
+            
             $p = 0;
             foreach ($raws->result as $row) {
                 if ((trim($row->event_status) == 'Finished' || trim($row->event_status) == 'After Over Time') && $p < 5) {
@@ -387,9 +388,6 @@
                     if (count($away) > 4) {
                         $part_H = []; $part_A = []; $score_HT_Q = 0; $score_FT_Q = 0; $score_live = [0,0];
                         if ((int)$live->event_live > 0) {
-                            // $start = new DateTime(date('Y-m-d H:i', strtotime('+6 hour',strtotime($live->event_date.' '.$live->event_time))));
-                            // $finish = new DateTime(date('Y-m-d H:i'));
-                            // $minute = ($start->diff($finish)->h*60)+$start->diff($finish)->i;
                             foreach ($live->scores as $index => $rowg) {
                                 if ($rowg[0] != null) {
                                     if ($index < 2) {
@@ -627,6 +625,13 @@
             }
         }
 
+        $pts_HT = (int)$part_Q[1] > 0 ? ($nba > 0 ? $part_Q[1] / 8 : $part_Q[1] / 6) : 0;
+        $pts_FT = (int)$part_Q[3] > 0 ? ($nba > 0 ? $part_Q[3] / 8 : $part_Q[3] / 6) : 0;
+        $max_HT = (int)($pts_HT*4);
+        $max_FT = (int)($pts_FT*4);
+        $pts_HT = number_format($pts_HT,1);
+        $pts_FT = number_format($pts_FT,1);
+
         return array(
             $tot_HT,$tot_FT,
             array($more_HT,$more_FT,$score_live),
@@ -634,7 +639,11 @@
             array($x_H_HT,$x_A_HT),
             array($x_H_FT,$x_A_FT),
             array($u_tot_HT,$u_tot_FT),
-            $part_Q
+            $part_Q,
+            array(
+                array($pts_HT,$max_HT),
+                array($pts_FT,$max_FT)
+            )
         );
     }
 
