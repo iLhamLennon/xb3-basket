@@ -557,33 +557,6 @@
         }
 
         $more_HT = 0; $more_FT = 0;
-        /*
-        if (($tot_HT[5] / 2) < $score_HT) {
-            $more_HT = (int)number_format($score_HT - ($tot_HT[5] / 2),0);
-            $min_tot_HT = $min_tot_HT + ($score_HT - ($tot_HT[5] / 2));
-            $per_min_tot_HT = $min_tot_HT / 100;
-
-            $p_tot_HT = (int)number_format($min_tot_HT + (20 * $per_min_tot_HT));
-
-            $tot_HT = [];
-            for ($x=5;$x>=0;$x--) {
-                array_push($tot_HT,($p_tot_HT-$x)-$absError);
-            }
-        }
-
-        if (($tot_FT[5] / 2) < $score_FT) {
-            $more_FT = (int)number_format($score_FT - ($tot_FT[5] / 2),0);
-            $min_tot_FT = $min_tot_FT + ($score_FT - ($tot_FT[5] / 2));
-            $per_min_tot_FT = $min_tot_FT / 100;
-
-            $p_tot_FT = (int)number_format($min_tot_FT + (20 * $per_min_tot_FT));
-
-            $tot_FT = [];
-            for ($x=5;$x>=0;$x--) {
-                array_push($tot_FT,($p_tot_FT-$x)-$absError);
-            }
-        }
-        */
 
         $x_H_HT = []; $x_A_HT = []; $x_H_FT = []; $x_A_FT = [];
         
@@ -625,12 +598,28 @@
             }
         }
 
+        $pQ_HT = [0,0,0,0];
+        $pQ_FT = [0,0,0,0];
+
+        for ($x=0;$x<=3;$x++) {
+            foreach ($part_Q as $index => $pQ) {
+                if ((int)$pQ >= $u_tot_HT[$x] && $index < 1) {
+                    $pQ_HT[$x] = $pQ_HT[$x]+1;
+                }
+                if ((int)$pQ >= $u_tot_FT[$x]) {
+                    $pQ_FT[$x] = $pQ_FT[$x]+1;
+                }
+            }
+        }
+
         $pts_HT = (int)$part_Q[1] > 0 ? ($nba > 0 ? $part_Q[1] / 8 : $part_Q[1] / 6) : 0;
         $pts_FT = (int)$part_Q[3] > 0 ? ($nba > 0 ? $part_Q[3] / 8 : $part_Q[3] / 6) : 0;
-        $max_HT = (int)($pts_HT*4);
-        $max_FT = (int)($pts_FT*4);
+        $max_HT = ((int)($pts_HT*4)) + ($score_FT - $score_HT);
+        $max_FT = ((int)($pts_FT*4)) + $score_live[0] + $score_live[1];
         $pts_HT = number_format($pts_HT,1);
         $pts_FT = number_format($pts_FT,1);
+        $percent_HT = $score_live[0] + $score_live[1] >= $min_tot_HT && $min_tot_HT > 0 ? " (".number_format(100-((($max_HT + $score_HT) - $min_tot_HT) / $per_min_tot_HT),0)." %)" : "";
+        $percent_FT = $score_live[0] + $score_live[1] >= $min_tot_FT && $min_tot_FT > 0 ? " (".number_format(100-(($max_FT - $min_tot_FT) / $per_min_tot_FT),0)." %)" : "";
 
         return array(
             $tot_HT,$tot_FT,
@@ -639,10 +628,10 @@
             array($x_H_HT,$x_A_HT),
             array($x_H_FT,$x_A_FT),
             array($u_tot_HT,$u_tot_FT),
-            $part_Q,
+            array($pQ_HT,$pQ_FT),
             array(
-                array($pts_HT,$max_HT),
-                array($pts_FT,$max_FT)
+                array($pts_HT,$max_HT.$percent_HT),
+                array($pts_FT,$max_FT.$percent_FT)
             )
         );
     }

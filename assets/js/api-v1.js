@@ -372,6 +372,9 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name,
         frmmatch.find('.top-navbar_full small').text(name)
         frmmatch.find('.top-navbar_full i').click(function(e) {
           setTimeout(function() {
+            home_id = 0
+            away_id = 0
+            chart_result = 2
             frmfixture.find('.page.match').css('display','none')
             frmfixture.find('header').removeClass('d-none')
           }, 300)
@@ -810,13 +813,9 @@ async function checkout(frmmatch,time) {
   frmmatch.find('#minutehome li').css('color','#523c01')
   frmmatch.find('#minutehome li label').css('color','#523c01')
   frmmatch.find('#minutehome li span').css('color','#523c01')
-  frmmatch.find('#forecasthome li').css('color','#523c01')
-  frmmatch.find('#forecasthome li span').css('color','#523c01')
   frmmatch.find('#minuteaway li').css('color','#523c01')
   frmmatch.find('#minuteaway li label').css('color','#523c01')
   frmmatch.find('#minuteaway li span').css('color','#523c01')
-  frmmatch.find('#forecastaway li').css('color','#523c01')
-  frmmatch.find('#forecastaway li span').css('color','#523c01')
   frmmatch.find('#scores li small').css('color','#000000')
 
   frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('(0:0)')
@@ -829,10 +828,6 @@ async function checkout(frmmatch,time) {
   frmmatch.find('#minutehome li:eq(2) span').text('0')
   frmmatch.find('#minutehome li:eq(3) label').text('0')
   frmmatch.find('#minutehome li:eq(3) span').text('0')
-  frmmatch.find('#forecasthome li:eq(0) span').text('X')
-  frmmatch.find('#forecasthome li:eq(1) span').text('X')
-  frmmatch.find('#forecasthome li:eq(2) span').text('X')
-  frmmatch.find('#forecasthome li:eq(3) span').text('X')
   frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('(0:0)')
   frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('')
   frmmatch.find('#minuteaway li:eq(0) label').text('0')
@@ -843,21 +838,10 @@ async function checkout(frmmatch,time) {
   frmmatch.find('#minuteaway li:eq(2) span').text('0')
   frmmatch.find('#minuteaway li:eq(3) label').text('0')
   frmmatch.find('#minuteaway li:eq(3) span').text('0')
-  frmmatch.find('#forecastaway li:eq(0) span').text('X')
-  frmmatch.find('#forecastaway li:eq(1) span').text('X')
-  frmmatch.find('#forecastaway li:eq(2) span').text('X')
-  frmmatch.find('#forecastaway li:eq(3) span').text('X')
-  frmmatch.find('#scores li small').text('')
-  frmmatch.find('#scores li:eq(12) small:eq(0)').text('Speed ')
-  frmmatch.find('#scores li:eq(12) small:eq(2)').text(' pts/mnt')
-  frmmatch.find('#scores li:eq(13) small:eq(0)').text('Max. over +')
+  frmmatch.find('#scores li small').text('0')
 
   if (goalscoredH_HT.length > 4 && goalconcedH_HT.length > 4 && goalscoredA_HT.length > 4 && goalconcedA_HT.length > 4 && goalscoredH_FT.length > 4 && goalconcedH_FT.length > 4 && goalscoredA_FT.length > 4 && goalconcedA_FT.length > 4) {
     frmmatch.find('#scores li small').css('color','white')
-    frmmatch.find('#scores li:eq(0) small').css('color','#ffc107')
-    frmmatch.find('#scores li:eq(1) small').css('color','#ffc107')
-    frmmatch.find('#scores li:eq(2) small').css('color','#ffc107')
-    frmmatch.find('#scores li:eq(3) small').css('color','#ffc107')
 
     if (time == 1) {
       if (criteria[0][0][0] && criteria[0][0][3] || criteria[0][0][2] && criteria[0][0][1]) {
@@ -866,11 +850,6 @@ async function checkout(frmmatch,time) {
         frmmatch.find('#minutehome li:eq(1) label').text(criteria[3][7][0][0][1])
         frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][0][0][2])
         frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][0][0][3])
-
-        frmmatch.find('#forecasthome li:eq(0) span').text(criteria[1][5][0][0]+'X')
-        frmmatch.find('#forecasthome li:eq(1) span').text(criteria[1][5][0][1]+'X')
-        frmmatch.find('#forecasthome li:eq(2) span').text(criteria[1][5][0][2]+'X')
-        frmmatch.find('#forecasthome li:eq(3) span').text(criteria[1][5][0][3]+'X')
 
         frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
         if (criteria[1][2][0] > 0) {
@@ -881,8 +860,6 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minutehome li').css('color','#ffc107')
           frmmatch.find('#minutehome li label').css('color','#ffc107')
           frmmatch.find('#minutehome li span').css('color','#ffc107')
-          frmmatch.find('#forecasthome li').css('color','#ffc107')
-          frmmatch.find('#forecasthome li span').css('color','#ffc107')
         }
 
         money()
@@ -890,11 +867,6 @@ async function checkout(frmmatch,time) {
         frmmatch.find('#minuteaway li:eq(1) label').text(criteria[3][7][0][1][1])
         frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][0][1][2])
         frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][0][1][3])
-
-        frmmatch.find('#forecastaway li:eq(0) span').text(criteria[1][5][1][0]+'X')
-        frmmatch.find('#forecastaway li:eq(1) span').text(criteria[1][5][1][1]+'X')
-        frmmatch.find('#forecastaway li:eq(2) span').text(criteria[1][5][1][2]+'X')
-        frmmatch.find('#forecastaway li:eq(3) span').text(criteria[1][5][1][3]+'X')
 
         frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
         if (criteria[1][2][0] > 0) {
@@ -905,22 +877,18 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minuteaway li').css('color','#ffc107')
           frmmatch.find('#minuteaway li label').css('color','#ffc107')
           frmmatch.find('#minuteaway li span').css('color','#ffc107')
-          frmmatch.find('#forecastaway li').css('color','#ffc107')
-          frmmatch.find('#forecastaway li span').css('color','#ffc107')
         }
 
         frmmatch.find('#scores li:eq(0) small').text(criteria[1][0][0])
         frmmatch.find('#scores li:eq(1) small').text(criteria[1][0][1])
         frmmatch.find('#scores li:eq(2) small').text(criteria[1][0][2])
         frmmatch.find('#scores li:eq(3) small').text(criteria[1][0][3])
-        frmmatch.find('#scores li:eq(4) small').text('('+criteria[1][3][0]+') '+criteria[1][7][0][0]+'pQ')
-        frmmatch.find('#scores li:eq(5) small').text('('+criteria[1][3][1]+') '+criteria[1][7][0][1]+'pQ')
-        frmmatch.find('#scores li:eq(6) small').text('('+criteria[1][3][2]+') '+criteria[1][7][0][2]+'pQ')
-        frmmatch.find('#scores li:eq(7) small').text('('+criteria[1][3][3]+') '+criteria[1][7][0][3]+'pQ')
       }
 
-      frmmatch.find('#scores li:eq(12) small:eq(1)').text(criteria[1][9][0][0])
-      frmmatch.find('#scores li:eq(13) small:eq(1)').text(criteria[1][9][0][1])
+      frmmatch.find('#scores li:eq(4) small:eq(0)').text(criteria[1][9][0][0])
+      frmmatch.find('#scores li:eq(4) small:eq(1)').text(' pts/mnt')
+      frmmatch.find('#scores li:eq(5) small:eq(0)').text('Q2 : ')
+      frmmatch.find('#scores li:eq(5) small:eq(1)').text(criteria[1][9][0][1])
     }
     else if (time == 2) {
       if (criteria[0][1][0] && criteria[0][1][3] || (criteria[0][1][2] && criteria[0][1][1])) {
@@ -930,11 +898,6 @@ async function checkout(frmmatch,time) {
         frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][1][0][2])
         frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][1][0][3])
 
-        frmmatch.find('#forecasthome li:eq(0) span').text(criteria[1][6][0][0]+'X')
-        frmmatch.find('#forecasthome li:eq(1) span').text(criteria[1][6][0][1]+'X')
-        frmmatch.find('#forecasthome li:eq(2) span').text(criteria[1][6][0][2]+'X')
-        frmmatch.find('#forecasthome li:eq(3) span').text(criteria[1][6][0][3]+'X')
-        
         frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
         if (criteria[1][2][1] > 0) {
           frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
@@ -944,8 +907,6 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minutehome li').css('color','#ffc107')
           frmmatch.find('#minutehome li label').css('color','#ffc107')
           frmmatch.find('#minutehome li span').css('color','#ffc107')
-          frmmatch.find('#forecasthome li').css('color','#ffc107')
-          frmmatch.find('#forecasthome li span').css('color','#ffc107')
         }
 
         money()
@@ -954,11 +915,6 @@ async function checkout(frmmatch,time) {
         frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][1][1][2])
         frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][1][1][3])
 
-        frmmatch.find('#forecastaway li:eq(0) span').text(criteria[1][6][1][0]+'X')
-        frmmatch.find('#forecastaway li:eq(1) span').text(criteria[1][6][1][1]+'X')
-        frmmatch.find('#forecastaway li:eq(2) span').text(criteria[1][6][1][2]+'X')
-        frmmatch.find('#forecastaway li:eq(3) span').text(criteria[1][6][1][3]+'X')
-        
         frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
         if (criteria[1][2][1] > 0) {
           frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
@@ -968,28 +924,19 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minuteaway li').css('color','#ffc107')
           frmmatch.find('#minuteaway li label').css('color','#ffc107')
           frmmatch.find('#minuteaway li span').css('color','#ffc107')
-          frmmatch.find('#forecastaway li').css('color','#ffc107')
-          frmmatch.find('#forecastaway li span').css('color','#ffc107')
         }
 
         frmmatch.find('#scores li:eq(0) small').text(criteria[1][1][0])
         frmmatch.find('#scores li:eq(1) small').text(criteria[1][1][1])
         frmmatch.find('#scores li:eq(2) small').text(criteria[1][1][2])
         frmmatch.find('#scores li:eq(3) small').text(criteria[1][1][3])
-        frmmatch.find('#scores li:eq(4) small').text('('+criteria[1][4][0]+') '+criteria[1][7][1][0]+'pQ')
-        frmmatch.find('#scores li:eq(5) small').text('('+criteria[1][4][1]+') '+criteria[1][7][1][1]+'pQ')
-        frmmatch.find('#scores li:eq(6) small').text('('+criteria[1][4][2]+') '+criteria[1][7][1][2]+'pQ')
-        frmmatch.find('#scores li:eq(7) small').text('('+criteria[1][4][3]+') '+criteria[1][7][1][3]+'pQ')
       }
 
-      frmmatch.find('#scores li:eq(12) small:eq(1)').text(criteria[1][9][1][0])
-      frmmatch.find('#scores li:eq(13) small:eq(1)').text(criteria[1][9][1][1])
+      frmmatch.find('#scores li:eq(4) small:eq(0)').text(criteria[1][9][1][0])
+      frmmatch.find('#scores li:eq(4) small:eq(1)').text(' pts/mnt')
+      frmmatch.find('#scores li:eq(5) small:eq(0)').text('Total : ')
+      frmmatch.find('#scores li:eq(5) small:eq(1)').text(criteria[1][9][1][1])
     }
-
-    frmmatch.find('#scores li:eq(8) small').text(criteria[1][8][0])
-    frmmatch.find('#scores li:eq(9) small').text(criteria[1][8][1])
-    frmmatch.find('#scores li:eq(10) small').text(criteria[1][8][2])
-    frmmatch.find('#scores li:eq(11) small').text(criteria[1][8][3])
   }
 }
 
