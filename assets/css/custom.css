@@ -201,7 +201,7 @@ form button i {
     display: none;
 }
 
-.load,.checkout {
+.load,.score,.checkout {
     position: fixed;
     height: 100%;
     width: 100%;
@@ -212,8 +212,12 @@ form button i {
     display: none;
 }
 
-.load {
+.load,.score {
     align-content: center;
+}
+
+.score {
+    display: block;
 }
 
 .popup {
@@ -399,12 +403,13 @@ form button i {
 
 .chart {
     width: 100%;
-    min-height: 5rem;
-    max-height: 5rem;
+    min-height: 3rem;
+    max-height: 3rem;
 }
 
 select {
     outline: none;
+    font-size: inherit;
 }
 
 .avatar img {

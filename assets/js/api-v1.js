@@ -347,7 +347,7 @@ function search(frmstanding, val) {
 
 async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name,nba) {
   $('.load').css('display','block')
-  await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&home='+home+'&away='+away+'&nba='+nba, {
+  await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&home='+home+'&away='+away+'&nba='+nba+'&qhome=0&qaway=0&minute=0', {
     method: 'GET'
   })
   .then(function(response) {
@@ -410,7 +410,7 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name,
   })
 }
 
-async function match(formstanding,name,flag,league,id,team,nba) {
+function match(formstanding,name,flag,league,id,team,nba) {
   if (home_id<1) {
     home_id = id
     home_name = team
@@ -423,8 +423,20 @@ async function match(formstanding,name,flag,league,id,team,nba) {
   else if (away_id<1) {
     away_id = id
     away_name = team
+
+    $('.score').removeClass('d-none')
+    $('.score input').val('')
+    $('.score select').val('')
+    $('.score button').focus()
+
+    m_formstanding = formstanding,m_name = name,m_flag = flag,m_league = league,m_nba = nba
+  }
+}
+
+async function calc(qhome,qaway,minutes) {
+    $('.score').addClass('d-none')
     $('.load').css('display','block')
-    await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&home='+home_id+'&away='+away_id+'&nba='+nba, {
+    await fetch('services/'+API+'.php?key='+key+'&act=match&league='+m_league+'&home='+home_id+'&away='+away_id+'&nba='+m_nba+'&qhome='+qhome+'&qaway='+qaway+'&minute='+minutes, {
       method: 'GET'
     })
     .then(function(response) {
@@ -462,11 +474,11 @@ async function match(formstanding,name,flag,league,id,team,nba) {
             }, 300)
           })
           frmmatch.find('.top-navbar_full small').focus()
-          frmmatch.find('.top-navbar_full small').text(name)
+          frmmatch.find('.top-navbar_full small').text(m_name)
           frmmatch.find('.top-navbar_full small span').remove()
           frmmatch.find('.top-navbar_full small i').remove()
           frmmatch.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
-          frmmatch.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+flag+"')")
+          frmmatch.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+m_flag+"')")
           frmmatch.find('.top-navbar_full small').append('<i class="fas fa-globe text-white"></i>')
           frmmatch.find('.top-navbar_full small i').click(function(e) {
             frmstanding.find('.top-navbar.standing').removeClass('d-none')
@@ -501,12 +513,11 @@ async function match(formstanding,name,flag,league,id,team,nba) {
           frmmatch.find('.accordion-item.match button').focus()
           setchart(result.value[0],result.value[1],frmmatch)
         })
-        formstanding.find('input[type="search"]').val('')
-        formstanding.find('.accordion-item.standing').removeClass('d-none')
+        m_formstanding.find('input[type="search"]').val('')
+        m_formstanding.find('.accordion-item.standing').removeClass('d-none')
         $('.load').css('display','none')
       }
     })
-  }
 }
 
 async function standing(index,league,name,nba,flag) {
@@ -616,6 +627,12 @@ async function league(index,country,flag) {
     }
   })
 }
+
+let m_formstanding = null,m_name = null,m_flag = null,m_league = null,m_nba = null
+
+$('.score button').on('click', async function(e) {
+  await calc(parseInt($('.score input:eq(0)').val()),parseInt($('.score input:eq(1)').val()),parseInt($('.score select').val()))
+})
 
 $('.nagivation-menu-wrap ul li').on('click', async function(e) {
   if($('.nagivation-menu-wrap ul li').index($(this)) < 1) {
@@ -842,6 +859,8 @@ async function checkout(frmmatch,time) {
 
   if (goalscoredH_HT.length > 4 && goalconcedH_HT.length > 4 && goalscoredA_HT.length > 4 && goalconcedA_HT.length > 4 && goalscoredH_FT.length > 4 && goalconcedH_FT.length > 4 && goalscoredA_FT.length > 4 && goalconcedA_FT.length > 4) {
     frmmatch.find('#scores li small').css('color','white')
+    frmmatch.find('#scores li:eq(0) small:eq(0)').text('Min. ')
+    frmmatch.find('#scores li:eq(1) small:eq(0)').text('Max. ')
 
     if (time == 1) {
       if (criteria[0][0][0] && criteria[0][0][3] || criteria[0][0][2] && criteria[0][0][1]) {
@@ -879,16 +898,18 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minuteaway li span').css('color','#ffc107')
         }
 
-        frmmatch.find('#scores li:eq(0) small').text(criteria[1][0][0])
-        frmmatch.find('#scores li:eq(1) small').text(criteria[1][0][1])
-        frmmatch.find('#scores li:eq(2) small').text(criteria[1][0][2])
-        frmmatch.find('#scores li:eq(3) small').text(criteria[1][0][3])
+        frmmatch.find('#scores li:eq(0) small:eq(1)').text(criteria[1][10][0][0])
+        frmmatch.find('#scores li:eq(1) small:eq(1)').text(criteria[1][10][0][1])
+        frmmatch.find('#scores li:eq(2) small').text(criteria[1][0][0])
+        frmmatch.find('#scores li:eq(3) small').text(criteria[1][0][1])
+        frmmatch.find('#scores li:eq(4) small').text(criteria[1][0][2])
+        frmmatch.find('#scores li:eq(5) small').text(criteria[1][0][3])
       }
 
-      frmmatch.find('#scores li:eq(4) small:eq(0)').text(criteria[1][9][0][0])
-      frmmatch.find('#scores li:eq(4) small:eq(1)').text(' pts/mnt')
-      frmmatch.find('#scores li:eq(5) small:eq(0)').text('Q2 : ')
-      frmmatch.find('#scores li:eq(5) small:eq(1)').text(criteria[1][9][0][1])
+      frmmatch.find('#scores li:eq(6) small:eq(0)').text(criteria[1][9][0][0])
+      frmmatch.find('#scores li:eq(6) small:eq(1)').text(' pts/mnt')
+      frmmatch.find('#scores li:eq(7) small:eq(0)').text('Q2 : ')
+      frmmatch.find('#scores li:eq(7) small:eq(1)').text(criteria[1][9][0][1])
     }
     else if (time == 2) {
       if (criteria[0][1][0] && criteria[0][1][3] || (criteria[0][1][2] && criteria[0][1][1])) {
@@ -926,16 +947,18 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minuteaway li span').css('color','#ffc107')
         }
 
-        frmmatch.find('#scores li:eq(0) small').text(criteria[1][1][0])
-        frmmatch.find('#scores li:eq(1) small').text(criteria[1][1][1])
-        frmmatch.find('#scores li:eq(2) small').text(criteria[1][1][2])
-        frmmatch.find('#scores li:eq(3) small').text(criteria[1][1][3])
+        frmmatch.find('#scores li:eq(0) small:eq(1)').text(criteria[1][10][1][0])
+        frmmatch.find('#scores li:eq(1) small:eq(1)').text(criteria[1][10][1][1])
+        frmmatch.find('#scores li:eq(2) small').text(criteria[1][1][0])
+        frmmatch.find('#scores li:eq(3) small').text(criteria[1][1][1])
+        frmmatch.find('#scores li:eq(4) small').text(criteria[1][1][2])
+        frmmatch.find('#scores li:eq(5) small').text(criteria[1][1][3])
       }
 
-      frmmatch.find('#scores li:eq(4) small:eq(0)').text(criteria[1][9][1][0])
-      frmmatch.find('#scores li:eq(4) small:eq(1)').text(' pts/mnt')
-      frmmatch.find('#scores li:eq(5) small:eq(0)').text('Total : ')
-      frmmatch.find('#scores li:eq(5) small:eq(1)').text(criteria[1][9][1][1])
+      frmmatch.find('#scores li:eq(6) small:eq(0)').text(criteria[1][9][1][0])
+      frmmatch.find('#scores li:eq(6) small:eq(1)').text(' pts/mnt')
+      frmmatch.find('#scores li:eq(7) small:eq(0)').text('Total : ')
+      frmmatch.find('#scores li:eq(7) small:eq(1)').text(criteria[1][9][1][1])
     }
   }
 }

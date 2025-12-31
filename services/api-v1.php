@@ -223,6 +223,9 @@
         $league = $_GET['league'];
         $team = array($_GET['home'],$_GET['away']);
         $nba = $_GET['nba'];
+        $qhome = (int)preg_replace('/[^0-9]/','',$_GET['qhome']);
+        $qaway = (int)preg_replace('/[^0-9]/','',$_GET['qaway']);
+        $minute = (int)preg_replace('/[^0-9]/','',$_GET['minute']);
         $from = date('Y-m-d', strtotime('-3 month'));
         $to = date('Y-m-d');
         $table = 'as_matchs';
@@ -386,15 +389,20 @@
                     });
 
                     if (count($away) > 4) {
-                        $part_H = []; $part_A = []; $score_HT_Q = 0; $score_FT_Q = 0; $score_live = [0,0];
+                        $part_H = []; $part_A = []; $score_HT_Q = 0; $score_FT_Q = 0; $intTime1 = false; $intTime3 = false; $score_HA = 0; $score_live = [0,0];
                         if ((int)$live->event_live > 0) {
+                            $score_HA = $qhome+$qaway;
                             foreach ($live->scores as $index => $rowg) {
                                 if ($rowg[0] != null) {
                                     if ($index < 2) {
                                         $score_HT_Q = (int)$rowg[0]->score_home+(int)$rowg[0]->score_away;
+                                        $intTime1 = true;
                                     }
                                     else if ($index < 3) {
                                         $score_FT_Q = $score_HT_Q+(int)$rowg[0]->score_home+(int)$rowg[0]->score_away;
+                                    }
+                                    else if ($index < 4) {
+                                        $intTime3 = true;
                                     }
                                     array_push($part_H,(int)$rowg[0]->score_home);
                                     array_push($part_A,(int)$rowg[0]->score_away);
@@ -404,8 +412,8 @@
                             }
                         }
 
-                        $getMinMax = getMinMax($home,$away,$score_HT_Q,$score_FT_Q,$score_live,$part_H,$part_A,$nba);
-                        $getCriteria1 = count($getMinMax) > 0 ? getCriteria1($home,$away,$getMinMax,$absError) : [];
+                        $getMinMax = getMinMax($home,$away,$score_HT_Q,$score_FT_Q,$score_live,$part_H,$part_A,$nba,$intTime1,$intTime3,$score_HA,$minute);
+                        $getCriteria1 = count($getMinMax) > 0 ? getCriteria1($home,$away) : [];
                         $getCriteria2 = count($getCriteria1) > 0 ? getCriteria2($home,$away,$getMinMax[0][3]+$absError,$getMinMax[1][3]+$absError) : [];
                         $getCriteria3 = count($getCriteria2) > 0 ? getCriteria3($home,$away,$getMinMax[0][3]+$absError,$getMinMax[1][3]+$absError,$getCriteria2,$absError,$getMinMax) : [];
 
@@ -431,7 +439,7 @@
         echo json_encode($result);
     }
 
-    function getMinMax($home,$away,$score_HT,$score_FT,$score_live,$part_H,$part_A,$nba) {
+    function getMinMax($home,$away,$score_HT,$score_FT,$score_live,$part_H,$part_A,$nba,$intTime1,$intTime3,$score_HA,$minute) {
         $arrH = $home;
         $minscoredH_HT_1 = 0;
         $minconcedH_HT_1 = 0;
@@ -517,18 +525,30 @@
         }
 
         $totH_HT = 0; $totA_HT = 0;
-        if ($home[4]->scored_HT >= $home[3]->scored_HT && $away[4]->conced_HT > $away[3]->conced_HT) {
+        if (
+            ($home[4]->scored_HT < $home[3]->scored_HT && $home[2]->scored_HT <= $home[3]->scored_HT && $away[4]->conced_HT < $away[3]->conced_HT && $away[2]->conced_HT <= $away[3]->conced_HT) ||
+            ($home[2]->scored_HT > $home[3]->scored_HT && $home[3]->scored_HT > $home[4]->scored_HT && $away[2]->conced_HT > $away[3]->conced_HT && $away[3]->conced_HT > $away[4]->conced_HT)
+        ) {
             $totH_HT = $minscoredH_HT_1 + $minconcedA_HT_1;
         }
-        if ($away[4]->scored_HT >= $away[3]->scored_HT && $home[4]->conced_HT > $home[3]->conced_HT) {
+        if (
+            ($away[4]->scored_HT < $away[3]->scored_HT && $away[2]->scored_HT <= $away[3]->scored_HT && $home[4]->conced_HT < $home[3]->conced_HT && $home[2]->conced_HT <= $home[3]->conced_HT) ||
+            ($away[2]->scored_HT > $away[3]->scored_HT && $away[3]->scored_HT > $away[4]->scored_HT && $home[2]->conced_HT > $home[3]->conced_HT && $home[3]->conced_HT > $home[4]->conced_HT)
+        ) {
             $totA_HT = $minscoredA_HT_1 + $minconcedH_HT_1;
         }
 
         $totH_FT = 0; $totA_FT = 0;
-        if ($home[4]->scored_FT >= $home[3]->scored_FT && $away[4]->conced_FT > $away[3]->conced_FT) {
+        if (
+            ($home[4]->scored_FT < $home[3]->scored_FT && $home[2]->scored_FT <= $home[3]->scored_FT && $away[4]->conced_FT < $away[3]->conced_FT && $away[2]->conced_FT <= $away[3]->conced_FT) ||
+            ($home[2]->scored_FT > $home[3]->scored_FT && $home[3]->scored_FT > $home[4]->scored_FT && $away[2]->conced_FT > $away[3]->conced_FT && $away[3]->conced_FT > $away[4]->conced_FT)
+        ) {
             $totH_FT = $minscoredH_FT_1 + $minconcedA_FT_1;
         }
-        if ($away[4]->scored_FT >= $away[3]->scored_FT && $home[4]->conced_FT > $home[3]->conced_FT) {
+        if (
+            ($away[4]->scored_FT < $away[3]->scored_FT && $away[2]->scored_FT <= $away[3]->scored_FT && $home[4]->conced_FT < $home[3]->conced_FT && $home[2]->conced_FT <= $home[3]->conced_FT) ||
+            ($away[2]->scored_FT > $away[3]->scored_FT && $away[3]->scored_FT > $away[4]->scored_FT && $home[2]->conced_FT > $home[3]->conced_FT && $home[3]->conced_FT > $home[4]->conced_FT)
+        ) {
             $totA_FT = $minscoredA_FT_1 + $minconcedH_FT_1;
         }
 
@@ -547,7 +567,7 @@
         }
         
         // this NBA
-        if ($tot_FT[3] > 200 & $nba < 1) {
+        if ($tot_FT[3] > 225 & $nba < 1) {
             $tot_HT = [0,0,0,0]; $tot_FT = [0,0,0,0];
         }
 
@@ -587,6 +607,13 @@
             $part_Q[$index] = $row+$part_A[$index];
         }
 
+        if ($intTime1 && !$intTime3 && $score_HA > 0) {
+            $part_Q[1] = $score_HA;
+        }
+        if ($intTime1 && $intTime3 && $score_HA > 0) {
+            $part_Q[3] = $score_HA;
+        }
+
         foreach ($part_A as $row) {
             for ($x=0;$x<=3;$x++) {
                 if ($row >= $part_tot_HT[$x]) {
@@ -612,13 +639,15 @@
             }
         }
 
-        $pts_HT = (int)$part_Q[1] > 0 ? ($nba > 0 ? $part_Q[1] / 8 : $part_Q[1] / 6) : 0;
-        $pts_FT = (int)$part_Q[3] > 0 ? ($nba > 0 ? $part_Q[3] / 8 : $part_Q[3] / 6) : 0;
-        $max_HT = ((int)($pts_HT*4)) + ($score_FT - $score_HT);
-        $max_FT = ((int)($pts_FT*4)) + $score_live[0] + $score_live[1];
+        $pts_HT = (int)$part_Q[1] > 0 ? $part_Q[1] / $minute : 0;
+        $pts_FT = (int)$part_Q[3] > 0 ? $part_Q[3] / $minute : 0;
+
+        $max_HT = ((int)($pts_HT * ($nba>0?12-$minute:10-$minute))) + ($score_FT - $score_HT);
+        $max_FT = ((int)($pts_FT * ($nba>0?12-$minute:10-$minute))) + $score_live[0] + $score_live[1];
+
         $pts_HT = number_format($pts_HT,1);
         $pts_FT = number_format($pts_FT,1);
-        $percent_HT = $score_live[0] + $score_live[1] >= $min_tot_HT && $min_tot_HT > 0 ? " (".number_format(100-((($max_HT + $score_HT) - $min_tot_HT) / $per_min_tot_HT),0)." %)" : "";
+        $percent_HT = $score_live[0] + $score_live[1] >= $min_tot_HT && $min_tot_HT > 0 ? " (".number_format(100-((($max_HT + $score_HT) - $min_tot_HT) / $per_min_tot_HT),0)." %)" : ($max_HT > 0 && $score_HT > 0?" (".$max_HT.")" : "");
         $percent_FT = $score_live[0] + $score_live[1] >= $min_tot_FT && $min_tot_FT > 0 ? " (".number_format(100-(($max_FT - $min_tot_FT) / $per_min_tot_FT),0)." %)" : "";
 
         return array(
@@ -632,57 +661,76 @@
             array(
                 array($pts_HT,$max_HT.$percent_HT),
                 array($pts_FT,$max_FT.$percent_FT)
-            )
+            ),
+            array(
+                array($min_tot_HT,$min_tot_HT+($per_min_tot_HT*100)),
+                array($min_tot_FT,$min_tot_FT+($per_min_tot_FT*100)),
+            ),
+            $part_Q
         );
     }
 
-    function getCriteria1($home,$away,$minmax,$absError) {
-        $scoredH_HT = true; $scoredH_FT = true;
-        $concedH_HT = true; $concedH_FT = true;
-        $scoredA_HT = true; $scoredA_FT = true;
-        $concedA_HT = true; $concedA_FT = true;
+    function getCriteria1($home,$away) {
+        $scoredH_HT = false; $scoredH_FT = false;
+        $concedH_HT = false; $concedH_FT = false;
+        $scoredA_HT = false; $scoredA_FT = false;
+        $concedA_HT = false; $concedA_FT = false;
 
+        $last0_H = array_slice($home,2,1);
         $last1_H = array_slice($home,3,1);
         $last2_H = array_slice($home,4,1);
+        $last0_A = array_slice($away,2,1);
         $last1_A = array_slice($away,3,1);
         $last2_A = array_slice($away,4,1);
 
-        if ($last2_H[0]->scored_HT < $last1_H[0]->scored_HT) {
-            $scoredH_HT = false;
+        if (
+            ($last2_H[0]->scored_HT < $last1_H[0]->scored_HT && $last0_H[0]->scored_HT <= $last1_H[0]->scored_HT) ||
+            ($last0_H[0]->scored_HT > $last1_H[0]->scored_HT && $last1_H[0]->scored_HT > $last2_H[0]->scored_HT)
+        ) {
+            $scoredH_HT = true;
         }
-        if ($last2_H[0]->scored_FT < $last1_H[0]->scored_FT) {
-            $scoredH_FT = false;
+        if (
+            ($last2_H[0]->scored_FT < $last1_H[0]->scored_FT && $last0_H[0]->scored_FT <= $last1_H[0]->scored_FT) ||
+            ($last0_H[0]->scored_FT > $last1_H[0]->scored_FT && $last1_H[0]->scored_FT > $last2_H[0]->scored_FT)
+        ) {
+            $scoredH_FT = true;
         }
-        if ($last2_H[0]->conced_HT <= $last1_H[0]->conced_HT) {
-            $concedH_HT = false;
-            if ($last2_H[0]->conced_HT == $last1_H[0]->conced_HT && $last2_H[0]->conced_HT > ($minmax[1][0]+$absError) && $last1_H[0]->conced_HT > ($minmax[1][0]+$absError)) {
-                $concedH_HT = true;
-            }
+        if (
+            ($last2_H[0]->conced_HT < $last1_H[0]->conced_HT && $last0_H[0]->conced_HT <= $last1_H[0]->conced_HT) ||
+            ($last0_H[0]->conced_HT > $last1_H[0]->conced_HT && $last1_H[0]->conced_HT > $last2_H[0]->conced_HT)
+        ) {
+            $concedH_HT = true;
         }
-        if ($last2_H[0]->conced_FT <= $last1_H[0]->conced_FT) {
-            $concedH_FT = false;
-            if ($last2_H[0]->conced_FT == $last1_H[0]->conced_FT && $last2_H[0]->conced_FT > ($minmax[5][0]+$absError) && $last1_H[0]->conced_FT > ($minmax[5][0]+$absError)) {
-                $concedH_FT = true;
-            }
+        if (
+            ($last2_H[0]->conced_FT < $last1_H[0]->conced_FT && $last2_H[0]->conced_FT <= $last1_H[0]->conced_FT) ||
+            ($last0_H[0]->conced_FT > $last1_H[0]->conced_FT && $last1_H[0]->conced_FT > $last2_H[0]->conced_FT)
+        ) {
+            $concedH_FT = true;
         }
         
-        if ($last2_A[0]->scored_HT < $last1_A[0]->scored_HT) {
-            $scoredA_HT = false;
+        if (
+            ($last2_A[0]->scored_HT < $last1_A[0]->scored_HT && $last0_A[0]->scored_HT <= $last1_A[0]->scored_HT) ||
+            ($last0_A[0]->scored_HT > $last1_A[0]->scored_HT && $last1_A[0]->scored_HT > $last2_A[0]->scored_HT)
+        ) {
+            $scoredA_HT = true;
         }
-        if ($last2_A[0]->scored_FT < $last1_A[0]->scored_FT) {
-            $scoredA_FT = false;
+        if (
+            ($last2_A[0]->scored_FT < $last1_A[0]->scored_FT && $last0_A[0]->scored_FT <= $last1_A[0]->scored_FT) ||
+            ($last0_A[0]->scored_FT > $last1_A[0]->scored_FT && $last1_A[0]->scored_FT > $last2_A[0]->scored_FT)
+        ) {
+            $scoredA_FT = true;
         }
-        if ($last2_A[0]->conced_HT <= $last1_A[0]->conced_HT) {
-            $concedA_HT = false;
-            if ($last2_A[0]->conced_HT == $last1_A[0]->conced_HT && $last2_A[0]->conced_HT > ($minmax[3][0]+$absError) && $last1_A[0]->conced_HT > ($minmax[3][0]+$absError)) {
-                $concedA_HT = true;
-            }
+        if (
+            ($last2_A[0]->conced_HT < $last1_A[0]->conced_HT && $last0_A[0]->conced_HT <= $last1_A[0]->conced_HT) ||
+            ($last0_A[0]->conced_HT > $last1_A[0]->conced_HT && $last1_A[0]->conced_HT > $last2_A[0]->conced_HT)
+        ) {
+            $concedA_HT = true;
         }
-        if ($last2_A[0]->conced_FT <= $last1_A[0]->conced_FT) {
-            $concedA_FT = false;
-            if ($last2_A[0]->conced_FT == $last1_A[0]->conced_FT && $last2_A[0]->conced_FT > ($minmax[7][0]+$absError) && $last1_A[0]->conced_FT > ($minmax[7][0]+$absError)) {
-                $concedA_FT = true;
-            }
+        if (
+            ($last2_A[0]->conced_FT < $last1_A[0]->conced_FT && $last0_A[0]->conced_FT <= $last1_A[0]->conced_FT) ||
+            ($last0_A[0]->conced_FT > $last1_A[0]->conced_FT && $last1_A[0]->conced_FT > $last2_A[0]->conced_FT)
+        ) {
+            $concedA_FT = true;
         }
 
         return array(
