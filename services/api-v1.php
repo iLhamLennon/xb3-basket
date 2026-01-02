@@ -170,7 +170,7 @@
             foreach ($raws->result->total as $row) {
                 $sql = mysqli_query($conn, "SELECT * FROM $table WHERE team_key=$row->team_key AND sport='$sport'");
                 if (mysqli_num_rows($sql) < 1) {
-                    mysqli_query($conn, "INSERT INTO $table(standing_place,team_key,standing_team,standing_P,league,sport) VALUES($row->standing_place,$row->team_key,'".str_replace("'","`",$row->standing_team)."',$row->standing_P,$league,'$sport')");
+                    mysqli_query($conn, "INSERT INTO $table(standing_place,team_key,standing_team,standing_P,league,sport) VALUES($row->standing_place,$row->team_key,'".str_replace("'","`",$row->standing_team)."',($row->standing_F-$row->standing_A),$league,'$sport')");
                 }
             }
             mysqli_query($conn, "UPDATE as_leagues SET season=1 WHERE league_key=$league AND sport='$sport'");
@@ -197,7 +197,7 @@
                 foreach ($raws->result->total as $row) {
                     $sql = mysqli_query($conn, "SELECT * FROM $table WHERE team_key=$row->team_key AND sport='$sport'");
                     if (mysqli_num_rows($sql) < 1) {
-                        mysqli_query($conn, "INSERT INTO $table(standing_place,team_key,standing_team,standing_P,league,sport) VALUES($row->standing_place,$row->team_key,'".str_replace("'","`",$row->standing_team)."',$row->standing_P,$league,'$sport')");
+                        mysqli_query($conn, "INSERT INTO $table(standing_place,team_key,standing_team,standing_P,league,sport) VALUES($row->standing_place,$row->team_key,'".str_replace("'","`",$row->standing_team)."',($row->standing_F-$row->standing_A),$league,'$sport')");
                     }
                 }
                 mysqli_query($conn, "UPDATE as_leagues SET season=$session WHERE league_key=$league AND sport='$sport'");
@@ -567,7 +567,7 @@
         }
         
         // this NBA
-        if ($tot_FT[3] > 225 & $nba < 1) {
+        if ($tot_FT[3] > 225 & $nba < 1 || $tot_FT[3] > 275 & $nba > 0) {
             $tot_HT = [0,0,0,0]; $tot_FT = [0,0,0,0];
         }
 
@@ -647,7 +647,7 @@
 
         $pts_HT = number_format($pts_HT,1);
         $pts_FT = number_format($pts_FT,1);
-        $percent_HT = $score_live[0] + $score_live[1] >= $min_tot_HT && $min_tot_HT > 0 ? " (".number_format(100-((($max_HT + $score_HT) - $min_tot_HT) / $per_min_tot_HT),0)." %)" : ($max_HT > 0 && $score_HT > 0?" (".$max_HT.")" : "");
+        $percent_HT = $score_live[0] + $score_live[1] >= $min_tot_HT && $min_tot_HT > 0 ? " (".number_format(100-((($max_HT + $score_HT) - $min_tot_HT) / $per_min_tot_HT),0)." %)" : ($max_HT > 0 && $score_HT > 0?" (".($max_HT+$score_HT).")" : "");
         $percent_FT = $score_live[0] + $score_live[1] >= $min_tot_FT && $min_tot_FT > 0 ? " (".number_format(100-(($max_FT - $min_tot_FT) / $per_min_tot_FT),0)." %)" : "";
 
         return array(

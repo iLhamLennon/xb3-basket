@@ -201,7 +201,7 @@ form button i {
     display: none;
 }
 
-.load,.score,.checkout {
+.load,.score,.checkout,.perfect {
     position: fixed;
     height: 100%;
     width: 100%;
@@ -265,6 +265,14 @@ form button i {
     font-weight: normal !important;
     max-width: fit-content;
     animation: checkout;
+    animation-duration: 300ms;
+    transform: rotate(-15deg);
+}
+
+.perfect label {
+    font-size: 4rem;
+    font-style: italic;
+    animation: perfect;
     animation-duration: 300ms;
     transform: rotate(0deg);
 }
@@ -462,6 +470,14 @@ select {
     50% { font-size: 4rem; }
     75% { font-size: 6rem; }
     100% { font-size: 8rem; }
+}
+
+@keyframes perfect {
+    0% { font-size: 0rem; }
+    25% { font-size: 1rem; }
+    50% { font-size: 2rem; }
+    75% { font-size: 3rem; }
+    100% { font-size: 4rem; }
 }
 
 @keyframes popup {

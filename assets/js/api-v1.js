@@ -549,7 +549,7 @@ async function standing(index,league,name,nba,flag) {
             $('.page.standing').css('display','none')
           }, 300)
         })
-        frmstanding.find('.top-navbar_full small').text(name)
+        frmstanding.find('.top-navbar_full small').text(name+(nba>0?' (12 S)':' (10 S)'))
         frmstanding.find('.top-navbar_full small span').remove()
         frmstanding.find('.top-navbar_full small').append('<span class="flag-icon"></span>')
         frmstanding.find('.top-navbar_full small span').css("background-image","url('data:image/png;base64,"+flag+"')")
@@ -864,13 +864,17 @@ async function checkout(frmmatch,time) {
 
     if (time == 1) {
       if (criteria[0][0][0] && criteria[0][0][3] || criteria[0][0][2] && criteria[0][0][1]) {
-        money()
+        if (criteria[3][7][0][0][0] == '100/100' && criteria[3][7][0][0][3] == '100/100' && criteria[3][7][0][1][0] == '100/100' && criteria[3][7][0][1][3] == '100/100') {
+          perfect()
+        } else {
+          money()
+        }
         frmmatch.find('#minutehome li:eq(0) label').text(criteria[3][7][0][0][0])
         frmmatch.find('#minutehome li:eq(1) label').text(criteria[3][7][0][0][1])
         frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][0][0][2])
         frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][0][0][3])
 
-        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text(criteria[1][2][2][0]+':'+criteria[1][2][2][1]+' ('+(parseInt(criteria[1][2][2][0])+parseInt(criteria[1][2][2][1]))+')')
         if (criteria[1][2][0] > 0) {
           frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][0])
         }
@@ -881,13 +885,17 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minutehome li span').css('color','#ffc107')
         }
 
-        money()
+        if (criteria[3][7][0][1][0] == '100/100' && criteria[3][7][0][1][3] == '100/100' && criteria[3][7][0][0][0] == '100/100' && criteria[3][7][0][0][3] == '100/100') {
+          perfect()
+        } else {
+          money()
+        }
         frmmatch.find('#minuteaway li:eq(0) label').text(criteria[3][7][0][1][0])
         frmmatch.find('#minuteaway li:eq(1) label').text(criteria[3][7][0][1][1])
         frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][0][1][2])
         frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][0][1][3])
 
-        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text(criteria[1][2][2][0]+':'+criteria[1][2][2][1]+' ('+(parseInt(criteria[1][2][2][0])+parseInt(criteria[1][2][2][1]))+')')
         if (criteria[1][2][0] > 0) {
           frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][0])
         }
@@ -913,13 +921,17 @@ async function checkout(frmmatch,time) {
     }
     else if (time == 2) {
       if (criteria[0][1][0] && criteria[0][1][3] || (criteria[0][1][2] && criteria[0][1][1])) {
-        money()
+        if (criteria[3][7][1][0][0] == '100/100' && criteria[3][7][1][0][3] == '100/100' && criteria[3][7][1][1][0] == '100/100' && criteria[3][7][1][1][3] == '100/100') {
+          perfect()
+        } else {
+          money()
+        }
         frmmatch.find('#minutehome li:eq(0) label').text(criteria[3][7][1][0][0])
         frmmatch.find('#minutehome li:eq(1) label').text(criteria[3][7][1][0][1])
         frmmatch.find('#minutehome li:eq(2) label').text(criteria[3][7][1][0][2])
         frmmatch.find('#minutehome li:eq(3) label').text(criteria[3][7][1][0][3])
 
-        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(0)').text(criteria[1][2][2][0]+':'+criteria[1][2][2][1]+' ('+(parseInt(criteria[1][2][2][0])+parseInt(criteria[1][2][2][1]))+')')
         if (criteria[1][2][1] > 0) {
           frmmatch.find('.accordion-item.match:eq(0) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
         }
@@ -930,13 +942,17 @@ async function checkout(frmmatch,time) {
           frmmatch.find('#minutehome li span').css('color','#ffc107')
         }
 
-        money()
+        if (criteria[3][7][1][1][0] == '100/100' && criteria[3][7][1][1][3] == '100/100' && criteria[3][7][1][0][0] == '100/100' && criteria[3][7][1][0][3] == '100/100') {
+          perfect()
+        } else {
+          money()
+        }
         frmmatch.find('#minuteaway li:eq(0) label').text(criteria[3][7][1][1][0])
         frmmatch.find('#minuteaway li:eq(1) label').text(criteria[3][7][1][1][1])
         frmmatch.find('#minuteaway li:eq(2) label').text(criteria[3][7][1][1][2])
         frmmatch.find('#minuteaway li:eq(3) label').text(criteria[3][7][1][1][3])
 
-        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text('('+criteria[1][2][2][0]+':'+criteria[1][2][2][1]+')')
+        frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(0)').text(criteria[1][2][2][0]+':'+criteria[1][2][2][1]+' ('+(parseInt(criteria[1][2][2][0])+parseInt(criteria[1][2][2][1]))+')')
         if (criteria[1][2][1] > 0) {
           frmmatch.find('.accordion-item.match:eq(1) ul li:eq(1) small span:eq(1)').text('more +'+criteria[1][2][1])
         }
@@ -967,6 +983,13 @@ async function money() {
   await $('.checkout').css('display','block')
   setTimeout(function() {
     $('.checkout').css('display','none')
+  }, 1000)
+}
+
+async function perfect() {
+  await $('.perfect').css('display','block')
+  setTimeout(function() {
+    $('.perfect').css('display','none')
   }, 1000)
 }
 
