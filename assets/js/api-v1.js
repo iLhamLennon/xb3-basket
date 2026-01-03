@@ -345,9 +345,9 @@ function search(frmstanding, val) {
   }
 }
 
-async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name,nba) {
+async function matchs(frmfixture,flag,name,league,country,home,away,home_name,away_name,nba) {
   $('.load').css('display','block')
-  await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&home='+home+'&away='+away+'&nba='+nba+'&qhome=0&qaway=0&minute=0', {
+  await fetch('services/'+API+'.php?key='+key+'&act=match&league='+league+'&country='+country+'&home='+home+'&away='+away+'&nhome='+home_name+'&naway='+away_name+'&nba='+nba+'&qhome=0&qaway=0&minute=0', {
     method: 'GET'
   })
   .then(function(response) {
@@ -410,7 +410,7 @@ async function matchs(frmfixture,flag,name,league,home,away,home_name,away_name,
   })
 }
 
-function match(formstanding,name,flag,league,id,team,nba) {
+function match(formstanding,name,flag,league,id,team,nba,country) {
   if (home_id<1) {
     home_id = id
     home_name = team
@@ -429,14 +429,14 @@ function match(formstanding,name,flag,league,id,team,nba) {
     $('.score select').val('')
     $('.score button').focus()
 
-    m_formstanding = formstanding,m_name = name,m_flag = flag,m_league = league,m_nba = nba
+    m_formstanding = formstanding,m_name = name,m_flag = flag,m_league = league,m_nba = nba,m_country = country
   }
 }
 
 async function calc(qhome,qaway,minutes) {
     $('.score').addClass('d-none')
     $('.load').css('display','block')
-    await fetch('services/'+API+'.php?key='+key+'&act=match&league='+m_league+'&home='+home_id+'&away='+away_id+'&nba='+m_nba+'&qhome='+qhome+'&qaway='+qaway+'&minute='+minutes, {
+    await fetch('services/'+API+'.php?key='+key+'&act=match&league='+m_league+'&country='+m_country+'&home='+home_id+'&away='+away_id+'&nhome='+home_name+'&naway='+away_name+'&nba='+m_nba+'&qhome='+qhome+'&qaway='+qaway+'&minute='+minutes, {
       method: 'GET'
     })
     .then(function(response) {
@@ -520,7 +520,7 @@ async function calc(qhome,qaway,minutes) {
     })
 }
 
-async function standing(index,league,name,nba,flag) {
+async function standing(index,league,name,nba,flag,country) {
   $('.load').css('display','block')
   await fetch('services/'+API+'.php?key='+key+'&act=standing&league='+league, {
     method: 'GET'
@@ -578,7 +578,7 @@ async function standing(index,league,name,nba,flag) {
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 .flag').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 span').addClass('text-warning')
             frmstanding.find('.accordion-item.standing:eq('+index+') h6 small').addClass('text-warning')
-            await match(frmstanding,name,flag,league,e.target.dataset.id,e.target.dataset.name,nba)
+            await match(frmstanding,name,flag,league,e.target.dataset.id,e.target.dataset.name,nba,country)
           })
         })
         home_id = 0
@@ -620,7 +620,7 @@ async function league(index,country,flag) {
         const row = Object.values(rows)
         list.append('<li data-id="'+row[0]+'" class="d-flex">'+row[1]+(!rows[1]?'':'<span class="material-symbols-outlined ms-auto text-white">arrows_outward</span>')+'</li>')
         $(".accordion-item.country:eq("+index+") ul li:eq("+liga+")").on('click', async function(e) {
-          await standing(liga,row[0],row[1],row[3],flag)
+          await standing(liga,row[0],row[1],row[3],flag,country)
         })
       })
       $('.load').css('display','none')
@@ -628,7 +628,7 @@ async function league(index,country,flag) {
   })
 }
 
-let m_formstanding = null,m_name = null,m_flag = null,m_league = null,m_nba = null
+let m_formstanding = null,m_name = null,m_flag = null,m_league = null,m_nba = null,m_country = null
 
 $('.score button').on('click', async function(e) {
   await calc(parseInt($('.score input:eq(0)').val()),parseInt($('.score input:eq(1)').val()),parseInt($('.score select').val()))
@@ -638,9 +638,14 @@ $('.nagivation-menu-wrap ul li').on('click', async function(e) {
   if($('.nagivation-menu-wrap ul li').index($(this)) < 1) {
     $('header.country').removeClass('d-none')
     $('.page.fixture').css('display','none')
+    $('.page.waitlist').css('display','none')
+  }
+  else if($('.nagivation-menu-wrap ul li').index($(this)) < 2) {
+    $('.page.waitlist').css('display','none')
+    await fixture()
   }
   else {
-    await fixture()
+    await waitlist()
   }
 })
 
@@ -733,7 +738,7 @@ async function fixture() {
               +'<small class="ms-auto text-white">'+row[5]+'</small>'
               +'</div>'
               +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
-              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'<li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
               +'</ul>'
               +'</div>')
             frmfixture.find('.flag.fixture').eq(n_country).css("background-image","url('data:image/png;base64,"+row[2]+"')")
@@ -741,7 +746,7 @@ async function fixture() {
           }
           else if (league == row[4] && dates == row[5]) {
             list.append('<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
-              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'<li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
               +'</ul>')
           }
           else if (league == row[4] && dates != row[5]) {
@@ -751,7 +756,7 @@ async function fixture() {
               +'<small class="ms-auto text-white">'+row[5]+'</small>'
               +'</div>'
               +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
-              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'<li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
               +'</ul>')
           }
           else if (league != row[4]) {
@@ -761,12 +766,92 @@ async function fixture() {
               +'<small class="ms-auto text-white">'+row[5]+'</small>'
               +'</div>'
               +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
-              +'<li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'<li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[8]+'</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-2 text-center text-white">-</li><li data-country='+row[0]+' data-flag='+row[2]+' data-league='+row[3]+' data-name='+row[4]+' data-home='+row[6]+' data-away='+row[7]+' data-nhome='+row[8]+' data-naway='+row[9]+' data-nba='+row[10]+' class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
               +'</ul>')
           }
           frmfixture.find('ul').eq(n_match).on('click', async function(e) {
-            await matchs(frmfixture,e.target.dataset.flag,e.target.dataset.name,e.target.dataset.league,e.target.dataset.home,e.target.dataset.away,e.target.dataset.nhome,e.target.dataset.naway,e.target.dataset.nba)
+            await matchs(frmfixture,e.target.dataset.flag,e.target.dataset.name,e.target.dataset.league,e.target.dataset.country,e.target.dataset.home,e.target.dataset.away,e.target.dataset.nhome,e.target.dataset.naway,e.target.dataset.nba)
           })
+          n_match++
+        })
+      })
+      $('.load').css('display','none')
+    }
+  })
+}
+
+async function waitlist() {
+  $('.load').css('display','block')
+  await fetch('services/'+API+'.php?key='+key+'&act=waitlist', {
+    method: 'GET'
+  })
+  .then(function(response) {
+    if (response.status != 200) {
+      $('.load').css('display','none')
+    }
+    return response.json()
+  })
+  .then(result => {
+    if (result.status) {
+      $('.page.waitlist').attr('src','waitlist.html')
+      $('.page.waitlist').css('display','block')
+      $('.page.waitlist').css('animation','loadin')
+      $('.page.waitlist').css('animation-duration','300ms')      
+      var ifixture = $('.page.waitlist')
+      ifixture.on('load', function() {
+        var frmfixture = ifixture.contents()
+        const list = frmfixture.find('.accordion.waitlist')
+        $('header.country').addClass('d-none')
+        frmfixture.find('header').removeClass('d-none')
+        list.empty()
+        let n_country = 0,country,league,dates,n_match = 0
+        result.value.forEach(rows => {
+          const row = Object.values(rows)
+          if (country != row[1]) {
+            country = row[1]
+            league = row[4]
+            dates = row[5]
+            list.append('<div class="accordion-item waitlist border-0 rounded-0 menu mt-4 bg-transparent">'
+              +'<h6 class="accordion-header m-0 d-flex align-items-center">'
+              +'<div class="flag waitlist me-2"></div>'
+              +'<span class="lh-1 my-0 text-white">'+row[1]+'</span>'
+              +'</h6>'
+              +'<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold">'+row[4]+'</small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li class="py-1 col-5 text-center text-white">'+row[8]+'</li><li class="py-1 col-2 text-center text-white">-</li><li class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>'
+              +'</div>')
+            frmfixture.find('.flag.waitlist').eq(n_country).css("background-image","url('data:image/png;base64,"+row[2]+"')")
+            n_country++
+          }
+          else if (league == row[4] && dates == row[5]) {
+            list.append('<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li class="py-1 col-5 text-center text-white">'+row[8]+'</li><li class="py-1 col-2 text-center text-white">-</li><li class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
+          else if (league == row[4] && dates != row[5]) {
+            dates = row[5]
+            list.append('<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold"></small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li class="py-1 col-5 text-center text-white">'+row[8]+'</li><li class="py-1 col-2 text-center text-white">-</li><li class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
+          else if (league != row[4]) {
+            league = row[4]
+            list.append('<div class="mt-2 px-1 pb-2 d-flex border-bottom border-dark">'
+              +'<small class="text-white fw-bold">'+row[4]+'</small>'
+              +'<small class="ms-auto text-white">'+row[5]+'</small>'
+              +'</div>'
+              +'<ul class="row m-0 p-0 py-1 border-bottom border-dark">'
+              +'<li class="py-1 col-5 text-center text-white">'+row[8]+'</li><li class="py-1 col-2 text-center text-white">-</li><li class="py-1 col-5 text-center text-white">'+row[9]+'</li>'
+              +'</ul>')
+          }
           n_match++
         })
       })
@@ -863,7 +948,7 @@ async function checkout(frmmatch,time) {
     frmmatch.find('#scores li:eq(1) small:eq(0)').text('Max. ')
 
     if (time == 1) {
-      if (criteria[0][0][0] && criteria[0][0][3] || criteria[0][0][2] && criteria[0][0][1]) {
+      if (criteria[0][0][0] && criteria[0][0][3] && criteria[3][8][0] || criteria[0][0][2] && criteria[0][0][1] && criteria[3][8][0]) {
         if (criteria[3][7][0][0][0] == '100/100' && criteria[3][7][0][0][3] == '100/100' && criteria[3][7][0][1][0] == '100/100' && criteria[3][7][0][1][3] == '100/100') {
           perfect()
         } else {
@@ -920,7 +1005,7 @@ async function checkout(frmmatch,time) {
       frmmatch.find('#scores li:eq(7) small:eq(1)').text(criteria[1][9][0][1])
     }
     else if (time == 2) {
-      if (criteria[0][1][0] && criteria[0][1][3] || (criteria[0][1][2] && criteria[0][1][1])) {
+      if (criteria[0][1][0] && criteria[0][1][3] && criteria[3][8][1] || (criteria[0][1][2] && criteria[0][1][1] && criteria[3][8][1])) {
         if (criteria[3][7][1][0][0] == '100/100' && criteria[3][7][1][0][3] == '100/100' && criteria[3][7][1][1][0] == '100/100' && criteria[3][7][1][1][3] == '100/100') {
           perfect()
         } else {

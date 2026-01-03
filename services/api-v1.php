@@ -41,11 +41,11 @@
 
         $newfixtures = true;
         $table = 'as_fixtures';
-        $sql = mysqli_query($conn, "SELECT * FROM $table WHERE sport='$sport' ORDER BY dates LIMIT 0,1");
+        $sql = mysqli_query($conn, "SELECT * FROM $table WHERE sport='$sport' AND result IS NULL ORDER BY dates LIMIT 0,1");
         $row = mysqli_fetch_assoc($sql);
         $exist = date('Y-m-d', strtotime('+6 hour', strtotime($row['dates'])));
         $start = date('Y-m-d H:i:s', strtotime('+6 hour', strtotime($row['dates'])));
-        $sql = mysqli_query($conn, "SELECT * FROM $table WHERE sport='$sport' ORDER BY dates DESC LIMIT 0,1");
+        $sql = mysqli_query($conn, "SELECT * FROM $table WHERE sport='$sport' AND result IS NULL ORDER BY dates DESC LIMIT 0,1");
         $row = mysqli_fetch_assoc($sql);
         $end = date('Y-m-d H:i:s', strtotime('+6 hour', strtotime($row['dates'])));
         if (
@@ -91,7 +91,7 @@
         $t2 = 'as_countries';
         $t3 = 'as_leagues';
 
-        $sql = mysqli_query($conn, "SELECT t2.country_key,t2.country_name,t2.country_flag,t3.league_key,t3.league_name,t1.dates,t1.home,t1.away,t1.nhome,t1.naway,t3.nba FROM $t1 t1 LEFT JOIN $t2 t2 ON t2.country_key=t1.country LEFT JOIN $t3 t3 ON t3.league_key=t1.league WHERE t1.sport='$sport' ORDER BY t1.dates,t1.country,t1.league");
+        $sql = mysqli_query($conn, "SELECT t2.country_key,t2.country_name,t2.country_flag,t3.league_key,t3.league_name,t1.dates,t1.home,t1.away,t1.nhome,t1.naway,t3.nba FROM $t1 t1 LEFT JOIN $t2 t2 ON t2.country_key=t1.country LEFT JOIN $t3 t3 ON t3.league_key=t1.league WHERE t1.sport='$sport' AND t1.result IS NULL ORDER BY t1.dates,t1.country,t1.league");
         $rows = [];
         while($row = mysqli_fetch_assoc($sql)) {
             $rows[] = $row;
@@ -118,6 +118,46 @@
                     'nba' => $row['nba']
                 ]);
             }
+        }
+
+        $result = [
+            'status' => true,
+            'value' => $list,
+            'message' => null
+        ];
+
+        echo json_encode($result);
+    }
+    else if ($act=='waitlist') {
+        $t1 = 'as_fixtures';
+        $t2 = 'as_countries';
+        $t3 = 'as_leagues';
+
+        $sql = mysqli_query($conn, "SELECT t2.country_key,t2.country_name,t2.country_flag,t3.league_key,t3.league_name,t1.dates,t1.home,t1.away,t1.nhome,t1.naway,t3.nba,t1.result,t1.quart FROM $t1 t1 LEFT JOIN $t2 t2 ON t2.country_key=t1.country LEFT JOIN $t3 t3 ON t3.league_key=t1.league WHERE DAY(t1.dates)=".(int)date('d')." AND MONTH(t1.dates)=".(int)date('m')." AND YEAR(t1.dates)=".(int)date('Y')." AND t1.sport='$sport' AND t1.result IS NOT NULL ORDER BY t1.dates DESC,t1.country,t1.league");
+        $rows = [];
+        while($row = mysqli_fetch_assoc($sql)) {
+            $rows[] = $row;
+        }
+        $list = array();
+        foreach ($rows as $row) {
+            $h = (int)date('H', strtotime("+6 hour", strtotime($row['dates'])));
+            if ($h >= 12 && $h <= 23) {
+                $h = $h - 12;
+            }
+            $m = date('i A', strtotime("+6 hour", strtotime($row['dates'])));
+            array_push($list, (object) [
+                'country_key' => $row['country_key'],
+                'country_name' => $row['country_name'],
+                'country_flag' => $row['country_flag'],
+                'league_key' => $row['league_key'],
+                'league_name' => $row['league_name'],
+                'dates' => '('.$row['quart'].' - '.$row['result'].') '.$h.':'.$m,
+                'home' => $row['home'],
+                'away' => $row['away'],
+                'nhome' => $row['nhome'],
+                'naway' => $row['naway'],
+                'nba' => $row['nba']
+            ]);
         }
 
         $result = [
@@ -221,7 +261,9 @@
     else if ($act=='match') {
         $key = $_GET['key'];
         $league = $_GET['league'];
+        $country = $_GET['country'];
         $team = array($_GET['home'],$_GET['away']);
+        $nteam = array($_GET['nhome'],$_GET['naway']);
         $nba = $_GET['nba'];
         $qhome = (int)preg_replace('/[^0-9]/','',$_GET['qhome']);
         $qaway = (int)preg_replace('/[^0-9]/','',$_GET['qaway']);
@@ -416,6 +458,8 @@
                         $getCriteria1 = count($getMinMax) > 0 ? getCriteria1($home,$away) : [];
                         $getCriteria2 = count($getCriteria1) > 0 ? getCriteria2($home,$away,$getMinMax[0][3]+$absError,$getMinMax[1][3]+$absError) : [];
                         $getCriteria3 = count($getCriteria2) > 0 ? getCriteria3($home,$away,$getMinMax[0][3]+$absError,$getMinMax[1][3]+$absError,$getCriteria2,$absError,$getMinMax) : [];
+                        
+                        takeOdds($conn,$getCriteria1,$getCriteria3,$team,$nteam,$league,$country,$sport);
 
                         $method2 = array(
                             $getCriteria1,
@@ -437,6 +481,65 @@
         }
 
         echo json_encode($result);
+    }
+
+    function takeOdds($conn,$rule,$criteria,$team,$nteam,$league,$country,$sport) {
+        $table = 'as_fixtures';
+        $result_HT = null;
+        $quart_HT = null;
+        $result_FT = null;
+        $quart_FT = null;
+
+        $pH_H_HT = explode('/',$criteria[7][0][0][1]);
+        $pH_A_HT = explode('/',$criteria[7][0][1][1]);
+        $pH_H_FT = explode('/',$criteria[7][1][0][1]);
+        $pH_A_FT = explode('/',$criteria[7][1][1][1]);
+
+        if (
+            ($criteria[7][0][0][0] == '100/100' && $criteria[7][0][0][3] == '100/100' && $criteria[7][0][1][0] == '100/100' && $criteria[7][0][1][3] == '100/100') ||
+            ($criteria[7][0][1][0] == '100/100' && $criteria[7][0][1][3] == '100/100' && $criteria[7][0][0][0] == '100/100' && $criteria[7][0][0][3] == '100/100')
+        ) {
+            $result_HT = 'Perfect'; $quart_HT = 'Q2';
+        }
+        else if (
+            ((int)$pH_H_HT[0] >= 80 && (int)$pH_H_HT[1] >= 80 && (int)$pH_A_HT[0] >= 80 && (int)$pH_A_HT[1] >= 80) ||
+            ((int)$pH_A_HT[0] >= 80 && (int)$pH_A_HT[1] >= 80 && (int)$pH_H_HT[0] >= 80 && (int)$pH_H_HT[1] >= 80)
+        ) {
+            $result_HT = 'Higher'; $quart_HT = 'Q2';
+        }
+
+        if (
+            ($criteria[7][1][0][0] == '100/100' && $criteria[7][1][0][3] == '100/100' && $criteria[7][1][1][0] == '100/100' && $criteria[7][1][1][3] == '100/100') ||
+            ($criteria[7][1][1][0] == '100/100' && $criteria[7][1][1][3] == '100/100' && $criteria[7][1][0][0] == '100/100' && $criteria[7][1][0][3] == '100/100')
+        ) {
+            $result_FT = 'Perfect'; $quart_FT = 'Total';
+        }
+        else if (
+            ((int)$pH_H_FT[0] >= 80 && (int)$pH_H_FT[1] >= 80 && (int)$pH_A_FT[0] >= 80 && (int)$pH_A_FT[1] >= 80) ||
+            ((int)$pH_A_FT[0] >= 80 && (int)$pH_A_FT[1] >= 80 && (int)$pH_H_FT[0] >= 80 && (int)$pH_H_FT[1] >= 80)
+        ) {
+            $result_FT = 'Higher'; $quart_FT = 'Total';
+        }
+
+        if ($result_HT != null && (($rule[0][0] && $rule[0][3]) || ($rule[0][2] && $rule[0][1]))) {
+            $sql = mysqli_query($conn, "SELECT * FROM $table WHERE home=$team[0] AND away=$team[1] AND quart IS NULL AND sport='$sport'");
+            if (mysqli_num_rows($sql) > 0) {
+                mysqli_query($conn, "UPDATE $table SET result='$result_HT',quart='$quart_HT' WHERE home=$team[0] AND away=$team[1] AND quart IS NULL AND sport='$sport'");
+            }
+        }
+
+        if ($result_FT != null && (($rule[1][0] && $rule[1][3]) || ($rule[1][2] && $rule[1][1]))) {
+            $sql = mysqli_query($conn, "SELECT * FROM $table WHERE home=$team[0] AND away=$team[1] AND quart IS NULL AND sport='$sport'");
+            if (mysqli_num_rows($sql) > 0) {
+                mysqli_query($conn, "UPDATE $table SET result='$result_FT',quart='$quart_FT' WHERE home=$team[0] AND away=$team[1] AND quart IS NULL AND sport='$sport'");
+            }
+            else {
+                $sql = mysqli_query($conn, "SELECT * FROM $table WHERE home=$team[0] AND away=$team[1] AND sport='$sport'");
+                $row = mysqli_fetch_assoc($sql);
+
+                mysqli_query($conn, "INSERT INTO $table(dates,home,away,nhome,naway,league,country,result,quart,sport) VALUES('".$row['dates']."',$team[0],$team[1],'$nteam[0]','$nteam[1]',$league,$country,'$result_FT','$quart_FT','$sport')");
+            }
+        }
     }
 
     function getMinMax($home,$away,$score_HT,$score_FT,$score_live,$part_H,$part_A,$nba,$intTime1,$intTime3,$score_HA,$minute) {
@@ -1123,6 +1226,31 @@
             $A_FT85 = ($A_P_FT85*20).'/'.($A_H_FT85*20);
             $A_FT80 = ($A_P_FT80*20).'/'.($A_H_FT80*20);
 
+        $prob_HT = false; $prob_FT = false;
+
+        $pH_H_HT = explode('/',$H_HT90);
+        $pH_A_HT = explode('/',$A_HT90);
+        $pH_H_FT = explode('/',$H_FT90);
+        $pH_A_FT = explode('/',$A_FT90);
+
+        if (
+            ($H_HT95 == '100/100' && $H_HT80 == '100/100' && $A_HT95 == '100/100' && $A_HT80 == '100/100') ||
+            ($A_HT95 == '100/100' && $A_HT80 == '100/100' && $H_HT95 == '100/100' && $H_HT80 == '100/100') ||
+            ((int)$pH_H_HT[0] >= 80 && (int)$pH_H_HT[1] >= 80 && (int)$pH_A_HT[0] >= 80 && (int)$pH_A_HT[1] >= 80) ||
+            ((int)$pH_A_HT[0] >= 80 && (int)$pH_A_HT[1] >= 80 && (int)$pH_H_HT[0] >= 80 && (int)$pH_H_HT[1] >= 80)
+        ) {
+            $prob_HT = true;
+        }
+
+        if (
+            ($H_FT95 == '100/100' && $H_FT80 == '100/100' && $A_FT95 == '100/100' && $A_FT80 == '100/100') ||
+            ($A_FT95 == '100/100' && $A_FT80 == '100/100' && $H_FT95 == '100/100' && $H_FT80 == '100/100') ||
+            ((int)$pH_H_FT[0] >= 80 && (int)$pH_H_FT[1] >= 80 && (int)$pH_A_FT[0] >= 80 && (int)$pH_A_FT[1] >= 80) ||
+            ((int)$pH_A_FT[0] >= 80 && (int)$pH_A_FT[1] >= 80 && (int)$pH_H_FT[0] >= 80 && (int)$pH_H_FT[1] >= 80)
+        ) {
+            $prob_FT = true;
+        }
+
         return array(
             array($min_score_HT-$absError,$min_score_FT-$absError,($min_score_HT+5)-$absError,($min_score_FT+5)-$absError,($min_score_HT+10)-$absError,($min_score_FT+10)-$absError),
             array($per_H_P_HT_min*20,$per_A_P_HT_min*20,$per_H_P_FT_min*20,$per_A_P_FT_min*20),
@@ -1140,6 +1268,7 @@
                     array($H_FT95,$H_FT90,$H_FT85,$H_FT80),
                     array($A_FT95,$A_FT90,$A_FT85,$A_FT80)
                 )
-            )
+            ),
+            array($prob_HT,$prob_FT)
         );
     }

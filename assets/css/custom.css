@@ -189,6 +189,7 @@ form button i {
 }
 
 .page.fixture,
+.page.waitlist,
 .page.matchs,
 .page.standing,
 .page.match
@@ -303,7 +304,9 @@ form button i {
     padding-top: 1rem;
 }
 
-.accordion.fixture ul li {
+.accordion.fixture ul li,
+.accordion.waitlist ul li
+{
     list-style: none;
     font-size: .9rem;
     min-height: 1.8rem;
